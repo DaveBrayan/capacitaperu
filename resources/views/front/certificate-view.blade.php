@@ -357,13 +357,35 @@
         // ====================================================================
         // HELPERS
         // ====================================================================
+        // Extraemos la raíz base del servidor actual (mismo protocolo + host)
+        // Esto garantiza que la URL usada sea del mismo origen sin importar
+        // si el usuario navega con "www" o sin "www", evitando bloqueos de CORS en html2canvas.
+        const currentOrigin = window.location.origin;
+
         function fixUrl(url) {
-            if (!url || url.startsWith('data:') || url.startsWith('http')) return url;
+            if (!url) return url;
+            if (url.startsWith('data:')) return url;
+
+            // Si es una URL absoluta (http:// o https://)
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                try {
+                    const parsed = new URL(url);
+                    // Reemplazamos el host por el del origen actual (normaliza www vs sin-www)
+                    return currentOrigin + parsed.pathname + (parsed.search || '');
+                } catch (e) {
+                    return url; // Si no se puede parsear, devolver tal cual
+                }
+            }
+
+            // Si es una URL relativa que contiene /storage/
             if (url.includes('/storage/')) {
                 const parts = url.split('/storage/');
-                return "{{ asset('storage') }}/" + parts[1];
+                return currentOrigin + '/storage/' + parts[parts.length - 1];
             }
-            return "{{ asset('storage') }}/" + url.replace(/^\//, '');
+
+            // URL relativa simple: construir desde el origen actual
+            const cleanPath = url.replace(/^\/+/, '');
+            return currentOrigin + '/' + cleanPath;
         }
 
         function getFontFamily(k) {
