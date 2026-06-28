@@ -122,12 +122,20 @@
                     </a>
                 @endif
 
-                @if(Auth::user()->hasPermission('advisors.view'))
+                @if(Auth::user()->hasPermission('advisors.view') || Auth::user()->hasPermission('claims.view'))
                     <p class="px-4 text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-3 mt-8">Contacto</p>
-                    <a href="{{ route('admin.advisors.index') }}" class="group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 {{ request()->routeIs('admin.advisors.*') ? 'sidebar-item-active' : 'hover:bg-white/5 text-white/60 hover:text-white' }}">
-                        <i class="ph-fill ph-whatsapp-logo text-xl"></i>
-                        <span class="font-bold text-sm">Asesores</span>
-                    </a>
+                    @if(Auth::user()->hasPermission('advisors.view'))
+                        <a href="{{ route('admin.advisors.index') }}" class="group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 {{ request()->routeIs('admin.advisors.*') ? 'sidebar-item-active' : 'hover:bg-white/5 text-white/60 hover:text-white' }}">
+                            <i class="ph-fill ph-whatsapp-logo text-xl"></i>
+                            <span class="font-bold text-sm">Asesores</span>
+                        </a>
+                    @endif
+                    @if(Auth::user()->hasPermission('claims.view'))
+                        <a href="{{ route('admin.claims.index') }}" class="group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 {{ request()->routeIs('admin.claims.*') ? 'sidebar-item-active' : 'hover:bg-white/5 text-white/60 hover:text-white' }}">
+                            <i class="ph-fill ph-warning-octagon text-xl"></i>
+                            <span class="font-bold text-sm">Reclamaciones</span>
+                        </a>
+                    @endif
                 @endif
 
                 @if(Auth::user()->hasPermission('users.view'))

@@ -83,6 +83,10 @@ class DatabaseSeeder extends Seeder
 
             // Editar Landing
             ['key' => 'landing.edit', 'group' => 'Sistema', 'label' => 'Editar Landing'],
+
+            // Reclamaciones
+            ['key' => 'claims.view', 'group' => 'Reclamaciones', 'label' => 'Ver Reclamaciones'],
+            ['key' => 'claims.manage', 'group' => 'Reclamaciones', 'label' => 'Gestionar Reclamaciones'],
         ];
 
         foreach ($perms as $perm) {

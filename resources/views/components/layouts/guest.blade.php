@@ -443,13 +443,12 @@
                 </div>
 
                 <div class="flex items-center gap-8">
-                    <a href="#"
+                    <a href="{{ route('terms') }}"
                         class="text-[10px] text-gray-500 hover:text-white font-black uppercase tracking-widest transition-colors">Términos</a>
-                    <a href="#"
+                    <a href="{{ route('privacy') }}"
                         class="text-[10px] text-gray-500 hover:text-white font-black uppercase tracking-widest transition-colors">Privacidad</a>
-                    <a href="#"
-                        class="text-[10px] text-gray-500 hover:text-white font-black uppercase tracking-widest transition-colors">Libro
-                        de Reclamaciones</a>
+                    <button onclick="openClaimsModal()"
+                        class="text-[10px] text-gray-500 hover:text-white font-black uppercase tracking-widest transition-colors cursor-pointer bg-transparent border-0 p-0 outline-none">Reclamaciones</button>
                 </div>
             </div>
         </div>
@@ -730,6 +729,138 @@
                 });
             }
         });
+    </script>
+
+    <!-- MODAL DE RECLAMACIONES -->
+    <div id="claims-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-[#001144]/60 backdrop-blur-md transition-opacity" onclick="closeClaimsModal()"></div>
+        
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center">
+                <div class="relative transform overflow-hidden rounded-[2.5rem] bg-white text-left shadow-2xl transition-all sm:w-full sm:max-w-md border border-white/20">
+                    
+                    <!-- Header -->
+                    <div class="bg-[#001144] px-8 py-6 text-white flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-[#FF7A00]">
+                                <i class="ph-bold ph-warning-octagon text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-black tracking-tight">Reclamaciones</h3>
+                                <p class="text-[10px] text-gray-300 font-bold uppercase tracking-widest">Libro de Reclamaciones Virtual</p>
+                            </div>
+                        </div>
+                        <button onclick="closeClaimsModal()" class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white transition-colors rounded-full hover:bg-white/10 cursor-pointer">
+                            <i class="ph-bold ph-x text-xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- Form -->
+                    <form id="claims-form" onsubmit="submitClaimForm(event)">
+                        @csrf
+                        <div class="p-8 space-y-5">
+                            
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nombre Completo <span class="text-[#FF7A00]">*</span></label>
+                                <input type="text" name="name" required class="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/10 outline-none text-xs font-bold text-[#001144] transition-all" placeholder="Ej: Juan Pérez">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Email <span class="text-[#FF7A00]">*</span></label>
+                                    <input type="email" name="email" required class="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/10 outline-none text-xs font-bold text-[#001144] transition-all" placeholder="Ej: juan@mail.com">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Teléfono</label>
+                                    <input type="text" name="phone" class="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/10 outline-none text-xs font-bold text-[#001144] transition-all" placeholder="Ej: 999888777">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Tipo de Problema <span class="text-[#FF7A00]">*</span></label>
+                                <select name="issue_type" required class="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-[#FF7A00] outline-none text-xs font-bold text-[#001144] transition-all cursor-pointer">
+                                    <option value="Acceso al Aula">Acceso al Aula Virtual</option>
+                                    <option value="Certificados">Problemas con Certificados</option>
+                                    <option value="Pagos y Matrículas">Dificultad con Pagos o Matrículas</option>
+                                    <option value="Soporte y Atención">Atención de Asesores o Docentes</option>
+                                    <option value="Otros">Otros (Especificar en descripción)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Descripción de la Reclamación <span class="text-[#FF7A00]">*</span></label>
+                                <textarea name="description" required rows="4" class="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-[#FF7A00] outline-none text-xs font-medium text-[#001144] resize-none transition-all" placeholder="Describe detalladamente el inconveniente..."></textarea>
+                            </div>
+
+                            <div id="claims-alert" class="hidden p-4 rounded-xl text-xs font-bold"></div>
+
+                            <div class="pt-4 border-t border-gray-50 flex justify-end gap-3">
+                                <button type="button" onclick="closeClaimsModal()" class="px-5 py-3 bg-gray-100 hover:bg-gray-200 text-[#001144] font-black rounded-xl text-[10px] uppercase tracking-widest transition-all cursor-pointer">
+                                    Cancelar
+                                </button>
+                                <button type="submit" id="claims-submit-btn" class="px-6 py-3 bg-[#001144] hover:bg-[#FF7A00] text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-xl shadow-blue-900/10 transition-all cursor-pointer">
+                                    Enviar Reclamación
+                                </button>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openClaimsModal() {
+            document.getElementById('claims-modal').classList.remove('hidden');
+            document.getElementById('claims-alert').className = 'hidden p-4 rounded-xl text-xs font-bold';
+            document.getElementById('claims-form').reset();
+        }
+        function closeClaimsModal() {
+            document.getElementById('claims-modal').classList.add('hidden');
+        }
+
+        async function submitClaimForm(e) {
+            e.preventDefault();
+            const form = document.getElementById('claims-form');
+            const btn = document.getElementById('claims-submit-btn');
+            const alertBox = document.getElementById('claims-alert');
+            
+            btn.disabled = true;
+            btn.innerText = 'Enviando...';
+            
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch("{{ route('claims.store') }}", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alertBox.innerText = data.message;
+                    alertBox.className = "p-4 rounded-xl text-xs font-bold bg-green-50 text-green-600 border border-green-200 block";
+                    setTimeout(() => {
+                        closeClaimsModal();
+                    }, 2500);
+                } else {
+                    alertBox.innerText = data.message || 'Ocurrió un error inesperado.';
+                    alertBox.className = "p-4 rounded-xl text-xs font-bold bg-red-50 text-red-600 border border-red-200 block";
+                    btn.disabled = false;
+                    btn.innerText = 'Enviar Reclamación';
+                }
+            } catch (err) {
+                alertBox.innerText = 'Error al conectar con el servidor.';
+                alertBox.className = "p-4 rounded-xl text-xs font-bold bg-red-50 text-red-600 border border-red-200 block";
+                btn.disabled = false;
+                btn.innerText = 'Enviar Reclamación';
+            }
+        }
     </script>
 </body>
 

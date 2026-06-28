@@ -57,6 +57,9 @@ Route::get('/curso/{slug}', [CatalogController::class, 'show'])->name('course.sh
 Route::get('/nosotros', function () { return view('front.about'); })->name('about');
 Route::get('/carrito', function () { return view('front.cart'); })->name('cart');
 Route::get('/contacto', function () { return view('front.contact'); })->name('contact');
+Route::get('/terminos', function () { return view('front.terms'); })->name('terms');
+Route::get('/privacidad', function () { return view('front.privacy'); })->name('privacy');
+Route::post('/reclamaciones', [\App\Http\Controllers\ClaimController::class, 'store'])->name('claims.store');
 
 // --- FORMULARIO DE REGISTRO POR INVITACIÓN (PÚBLICO) ---
 Route::get('/registro-invitado/exito', [App\Http\Controllers\GuestRegistrationController::class, 'showSuccess'])->name('enrollment.guest.success');
@@ -218,6 +221,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:web', 'setup.check'])-
 
     // Gestión de Asesores (WhatsApp)
     Route::resource('asesores', AdminAdvisorController::class)->names('advisors');
+
+    // Gestión de Reclamaciones
+    Route::resource('reclamaciones', \App\Http\Controllers\AdminClaimController::class)->names('claims')->only(['index', 'update', 'destroy']);
 
     // --- RUTAS NUEVAS PARA MODALES ---
     // Obtener trabajos de un curso
