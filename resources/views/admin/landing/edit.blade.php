@@ -101,20 +101,37 @@
                                     <textarea rows="3" name="footer_desc" class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#FF7A00] transition-all font-bold text-[#001144] text-sm resize-none">{{ $settings['footer_desc'] ?? 'Líderes en capacitación técnica y profesional. Potenciamos tu talento con certificación de alto impacto nacional y respaldo institucional.' }}</textarea>
                                 </div>
                                 <div class="space-y-2">
-                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Enlace Facebook</label>
-                                    <input type="text" name="social_facebook" value="{{ $settings['social_facebook'] ?? '#' }}" class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#FF7A00] transition-all font-bold text-[#001144] text-sm">
+                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Razón Social</label>
+                                    <input type="text" name="footer_razon_social" value="{{ $settings['footer_razon_social'] ?? 'CAPACITAPERU S.A.C.' }}" class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#FF7A00] transition-all font-bold text-[#001144] text-sm">
                                 </div>
                                 <div class="space-y-2">
-                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Enlace Instagram</label>
-                                    <input type="text" name="social_instagram" value="{{ $settings['social_instagram'] ?? '#' }}" class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#FF7A00] transition-all font-bold text-[#001144] text-sm">
+                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">RUC de la Empresa</label>
+                                    <input type="text" name="footer_ruc" value="{{ $settings['footer_ruc'] ?? '20600000000' }}" class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#FF7A00] transition-all font-bold text-[#001144] text-sm">
                                 </div>
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Enlace LinkedIn</label>
-                                    <input type="text" name="social_linkedin" value="{{ $settings['social_linkedin'] ?? '#' }}" class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#FF7A00] transition-all font-bold text-[#001144] text-sm">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Enlace YouTube</label>
-                                    <input type="text" name="social_youtube" value="{{ $settings['social_youtube'] ?? '#' }}" class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#FF7A00] transition-all font-bold text-[#001144] text-sm">
+
+                                <div class="col-span-1 md:col-span-2 space-y-4">
+                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Redes Sociales Activas (Selecciona y coloca el enlace)</label>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <div class="bg-gray-50 p-4.5 rounded-3xl border border-gray-100 flex gap-4 items-center">
+                                                <div class="w-1/3">
+                                                    <select name="social_net_{{ $i }}_type" class="w-full px-3 py-2.5 rounded-xl bg-white border border-gray-200 focus:border-[#FF7A00] outline-none text-xs font-bold text-[#001144]">
+                                                        <option value="">Ninguno</option>
+                                                        <option value="facebook" {{ ($settings['social_net_' . $i . '_type'] ?? '') == 'facebook' ? 'selected' : '' }}>Facebook</option>
+                                                        <option value="instagram" {{ ($settings['social_net_' . $i . '_type'] ?? '') == 'instagram' ? 'selected' : '' }}>Instagram</option>
+                                                        <option value="linkedin" {{ ($settings['social_net_' . $i . '_type'] ?? '') == 'linkedin' ? 'selected' : '' }}>LinkedIn</option>
+                                                        <option value="youtube" {{ ($settings['social_net_' . $i . '_type'] ?? '') == 'youtube' ? 'selected' : '' }}>YouTube</option>
+                                                        <option value="tiktok" {{ ($settings['social_net_' . $i . '_type'] ?? '') == 'tiktok' ? 'selected' : '' }}>TikTok</option>
+                                                        <option value="twitter" {{ ($settings['social_net_' . $i . '_type'] ?? '') == 'twitter' ? 'selected' : '' }}>X / Twitter</option>
+                                                        <option value="whatsapp" {{ ($settings['social_net_' . $i . '_type'] ?? '') == 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
+                                                    </select>
+                                                </div>
+                                                <div class="w-2/3">
+                                                    <input type="text" name="social_net_{{ $i }}_url" value="{{ $settings['social_net_' . $i . '_url'] ?? '' }}" placeholder="https://..." class="w-full px-3 py-2.5 rounded-xl bg-white border border-gray-200 focus:border-[#FF7A00] outline-none text-xs font-bold text-[#001144]">
+                                                </div>
+                                            </div>
+                                        @endfor
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -153,10 +170,6 @@
                                     <div class="grid grid-cols-2 gap-2">
                                         <input type="text" name="footer_col2_l2_text" value="{{ $settings['footer_col2_l2_text'] ?? 'Verificar Certificado' }}" placeholder="Texto Enlace 2" class="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-[#FF7A00] outline-none text-xs font-bold text-[#001144]">
                                         <input type="text" name="footer_col2_l2_url" value="{{ $settings['footer_col2_l2_url'] ?? '/certificado' }}" placeholder="Link 2 (ej: /certificado)" class="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-[#FF7A00] outline-none text-xs font-bold text-[#001144]">
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <input type="text" name="footer_col2_l3_text" value="{{ $settings['footer_col2_l3_text'] ?? 'Preguntas Frecuentes' }}" placeholder="Texto Enlace 3" class="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-[#FF7A00] outline-none text-xs font-bold text-[#001144]">
-                                        <input type="text" name="footer_col2_l3_url" value="{{ $settings['footer_col2_l3_url'] ?? '#' }}" placeholder="Link 3 (ej: #)" class="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-[#FF7A00] outline-none text-xs font-bold text-[#001144]">
                                     </div>
                                 </div>
                                 <!-- Columna 3 (Atención) -->
@@ -419,6 +432,25 @@
                                     <input type="text" name="home_pay_c3_title" value="{{ $settings['home_pay_c3_title'] ?? 'Tarjetas de Crédito/Débito' }}" class="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-xs font-bold text-[#001144]">
                                     <span class="text-[8px] font-black text-gray-400 uppercase block mt-1">Pago 3: Desc</span>
                                     <textarea rows="2" name="home_pay_c3_desc" class="w-full px-3 py-2 rounded-xl bg-white border border-gray-200 text-xs font-bold text-[#001144] resize-none">{{ $settings['home_pay_c3_desc'] ?? 'Aceptamos todas las tarjetas nacionales e internacionales con procesamiento seguro.' }}</textarea>
+                                </div>
+
+                                <!-- Configuración del Modal QR de Pago -->
+                                <div class="bg-[#001144]/5 p-6 rounded-3xl border border-dashed border-[#FF7A00]/20 col-span-1 md:col-span-2 space-y-4">
+                                    <span class="text-[10px] font-black text-[#FF7A00] uppercase tracking-widest block">Configuración de Código QR (Modal)</span>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="space-y-2">
+                                            <span class="text-[8px] font-black text-gray-400 uppercase block">Imagen del Código QR</span>
+                                            <div class="flex flex-col sm:flex-row gap-4 items-center bg-white p-4 rounded-2xl border border-gray-100">
+                                                <img id="preview-home_pay_qr_img" src="{{ isset($settings['home_pay_qr_img']) ? asset($settings['home_pay_qr_img']) : '' }}" class="h-24 object-contain max-w-[200px] {{ isset($settings['home_pay_qr_img']) ? '' : 'hidden' }}">
+                                                <input type="file" name="home_pay_qr_img" onchange="previewImage(this, 'preview-home_pay_qr_img')" class="text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200">
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <span class="text-[8px] font-black text-gray-400 uppercase block">Descripción del Modal QR</span>
+                                            <textarea rows="4" name="home_pay_qr_desc" placeholder="Detalles de cuentas, titular, o indicaciones para el escaneo." class="w-full px-4 py-3 rounded-2xl bg-white border border-gray-200 focus:border-[#FF7A00] outline-none text-xs font-bold text-[#001144] resize-none">{{ $settings['home_pay_qr_desc'] ?? 'Escanea este código QR desde tu app bancaria favorita (Yape, Plin, o banca móvil) para realizar el pago de forma instantánea.' }}</textarea>
+                                        </div>
+                                    </div>
                                 </div>
                                 <!-- CTA Final Home -->
                                 <div class="space-y-2 col-span-1 md:col-span-2 pt-4 border-t border-gray-100">

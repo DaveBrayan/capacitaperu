@@ -225,15 +225,15 @@
 
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
                 @forelse($categories as $category)
-                <a href="{{ route('catalog', ['category' => $category->slug]) }}" class="group relative bg-white/5 border border-white/10 rounded-[2rem] p-8 text-center hover:bg-white hover:border-white hover:-translate-y-3 transition-all duration-500 overflow-hidden shadow-2xl shadow-black/20">
+                <a href="{{ route('catalog', ['category' => $category->slug]) }}" class="group relative bg-white/5 border border-white/10 rounded-[2rem] px-3 py-8 text-center hover:bg-white hover:border-white hover:-translate-y-3 transition-all duration-500 overflow-hidden shadow-2xl shadow-black/20">
                     <!-- Glow effect on hover -->
                     <div class="absolute inset-0 bg-gradient-to-br from-[#FF7A00]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     
                     <div class="relative z-10">
                         <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-[#FF7A00] group-hover:scale-110 transition-all duration-500 shadow-xl">
-                            <i class="{{ $category->icon ?? 'ph-bold ph-layout' }} text-3xl text-white group-hover:text-white"></i>
+                            <i class="ph-bold {{ $category->icon ?? 'ph-layout' }} text-3xl text-white group-hover:text-white"></i>
                         </div>
-                        <h4 class="text-white font-black text-lg mb-2 group-hover:text-[#001144] transition-colors leading-tight">{{ $category->name }}</h4>
+                        <h4 class="text-white font-black text-xs sm:text-sm md:text-base mb-2 group-hover:text-[#001144] transition-colors leading-tight break-words uppercase px-1">{{ $category->name }}</h4>
                         <p class="text-white/40 text-[10px] font-black group-hover:text-[#001144]/60 transition-colors uppercase tracking-widest">{{ $category->courses_count }} Cursos</p>
                     </div>
 
@@ -258,11 +258,14 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-xl hover:border-[#FF7A00] transition-all group">
+                <div onclick="openQrModal()" class="bg-white p-8 rounded-3xl border border-gray-200 shadow-xl hover:border-[#FF7A00] transition-all group cursor-pointer hover:-translate-y-1 duration-300">
                     <div class="w-16 h-16 bg-[#FF7A00]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#FF7A00] transition-all">
                         <i class="ph-bold ph-qr-code text-3xl text-[#FF7A00] group-hover:text-white"></i>
                     </div>
-                    <h4 class="text-xl font-bold text-[#001144] mb-3">{{ $platformSettings['home_pay_c1_title'] ?? 'Transferencia QR (Simple)' }}</h4>
+                    <h4 class="text-xl font-bold text-[#001144] mb-3 flex items-center gap-2">
+                        {{ $platformSettings['home_pay_c1_title'] ?? 'Transferencia QR (Simple)' }}
+                        <i class="ph-bold ph-arrow-up-right text-xs opacity-0 group-hover:opacity-100 transition-all text-[#FF7A00]"></i>
+                    </h4>
                     <p class="text-gray-500 text-sm leading-relaxed">{{ $platformSettings['home_pay_c1_desc'] ?? 'Paga de forma inmediata escaneando nuestro código QR desde cualquier aplicación bancaria.' }}</p>
                 </div>
                 <div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-xl hover:border-[#FF7A00] transition-all group">
@@ -303,5 +306,67 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL DE PAGO QR (MÉTODOS DE PAGO) -->
+    <div id="qr-payment-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-[#001144]/60 backdrop-blur-md transition-opacity" onclick="closeQrModal()"></div>
+        
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center">
+                <div class="relative transform overflow-hidden rounded-[2.5rem] bg-white text-left shadow-2xl transition-all sm:w-full sm:max-w-md border border-white/20">
+                    
+                    <!-- Header -->
+                    <div class="bg-[#001144] px-8 py-6 text-white flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-[#FF7A00]">
+                                <i class="ph-fill ph-qr-code text-3xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-black tracking-tight">Pago con QR</h3>
+                                <p class="text-[10px] text-gray-300 font-bold uppercase tracking-widest">Inscripción Inmediata</p>
+                            </div>
+                        </div>
+                        <button onclick="closeQrModal()" class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white transition-colors rounded-full hover:bg-white/10 cursor-pointer">
+                            <i class="ph-bold ph-x text-xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="p-8 text-center space-y-6">
+                        @if(isset($platformSettings['home_pay_qr_img']) && !empty($platformSettings['home_pay_qr_img']))
+                            <div class="w-64 h-64 bg-gray-50 rounded-[2rem] border border-gray-100 flex items-center justify-center mx-auto overflow-hidden shadow-lg p-4 bg-white relative group">
+                                <img src="{{ asset($platformSettings['home_pay_qr_img']) }}" class="w-full h-full object-contain">
+                            </div>
+                        @else
+                            <!-- QR de demostración por defecto -->
+                            <div class="w-64 h-64 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col items-center justify-center mx-auto overflow-hidden shadow-lg p-6 bg-white">
+                                <i class="ph-bold ph-qr-code text-8xl text-gray-200 mb-2"></i>
+                                <span class="text-[10px] text-gray-400 font-bold uppercase">QR No Configurado</span>
+                            </div>
+                        @endif
+
+                        <p class="text-gray-600 text-xs font-semibold leading-relaxed px-2 text-left">
+                            {!! nl2br(e($platformSettings['home_pay_qr_desc'] ?? 'Escanea este código QR desde tu app bancaria favorita (Yape, Plin, o banca móvil) para realizar el pago de forma instantánea.')) !!}
+                        </p>
+
+                        <div class="pt-4 border-t border-gray-50 flex justify-end">
+                            <button onclick="closeQrModal()" class="px-6 py-3 bg-[#001144] hover:bg-[#FF7A00] text-white font-black rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer">
+                                Entendido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openQrModal() {
+            document.getElementById('qr-payment-modal').classList.remove('hidden');
+        }
+        function closeQrModal() {
+            document.getElementById('qr-payment-modal').classList.add('hidden');
+        }
+    </script>
 
 </x-layouts.guest>

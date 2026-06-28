@@ -246,23 +246,104 @@
                     <p class="text-gray-400 text-lg leading-relaxed font-medium">
                         {{ $platformSettings['footer_desc'] ?? 'Líderes en capacitación técnica y profesional. Potenciamos tu talento con certificación de alto impacto nacional y respaldo institucional.' }}
                     </p>
+                    
+                    @if(!empty($platformSettings['footer_razon_social']) || !empty($platformSettings['footer_ruc']))
+                        <div class="text-gray-500 text-xs font-semibold space-y-1 bg-white/2 p-4.5 rounded-2xl border border-white/5">
+                            @if(!empty($platformSettings['footer_razon_social']))
+                                <p class="flex items-center gap-2"><i class="ph-bold ph-buildings text-sm text-[#FF7A00]"></i> Razón Social: <span class="text-gray-400 font-bold">{{ $platformSettings['footer_razon_social'] }}</span></p>
+                            @endif
+                            @if(!empty($platformSettings['footer_ruc']))
+                                <p class="flex items-center gap-2"><i class="ph-bold ph-identification-card text-sm text-[#FF7A00]"></i> RUC: <span class="text-gray-400 font-bold">{{ $platformSettings['footer_ruc'] }}</span></p>
+                            @endif
+                        </div>
+                    @endif
+
                     <div class="flex items-center gap-4">
-                        <a href="{{ $platformSettings['social_facebook'] ?? '#' }}"
-                            class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-[#FF7A00] hover:text-white transition-all transform hover:-translate-y-1">
-                            <i class="ph-fill ph-facebook-logo text-xl"></i>
-                        </a>
-                        <a href="{{ $platformSettings['social_instagram'] ?? '#' }}"
-                            class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-[#FF7A00] hover:text-white transition-all transform hover:-translate-y-1">
-                            <i class="ph-fill ph-instagram-logo text-xl"></i>
-                        </a>
-                        <a href="{{ $platformSettings['social_linkedin'] ?? '#' }}"
-                            class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-[#FF7A00] hover:text-white transition-all transform hover:-translate-y-1">
-                            <i class="ph-fill ph-linkedin-logo text-xl"></i>
-                        </a>
-                        <a href="{{ $platformSettings['social_youtube'] ?? '#' }}"
-                            class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-[#FF7A00] hover:text-white transition-all transform hover:-translate-y-1">
-                            <i class="ph-fill ph-youtube-logo text-xl"></i>
-                        </a>
+                        @php
+                            $socialIcons = [
+                                'facebook' => 'ph-facebook-logo',
+                                'instagram' => 'ph-instagram-logo',
+                                'linkedin' => 'ph-linkedin-logo',
+                                'youtube' => 'ph-youtube-logo',
+                                'tiktok' => 'ph-tiktok-logo',
+                                'twitter' => 'ph-twitter-logo',
+                                'whatsapp' => 'ph-whatsapp-logo'
+                            ];
+                            $hasNewSocials = false;
+                            for($i = 1; $i <= 5; $i++) {
+                                if(!empty($platformSettings['social_net_' . $i . '_type']) && !empty($platformSettings['social_net_' . $i . '_url'])) {
+                                    $hasNewSocials = true;
+                                    break;
+                                }
+                            }
+                        @endphp
+                        
+                        @if($hasNewSocials)
+                            @for($i = 1; $i <= 5; $i++)
+                                @php
+                                    $type = $platformSettings['social_net_' . $i . '_type'] ?? '';
+                                    $url = $platformSettings['social_net_' . $i . '_url'] ?? '';
+                                    if (!empty($url) && $url !== '#' && !\Illuminate\Support\Str::startsWith($url, ['http://', 'https://', '//'])) {
+                                        $url = 'https://' . $url;
+                                    }
+                                @endphp
+                                @if(!empty($type) && !empty($url) && $url !== '#')
+                                    <a href="{{ $url }}" target="_blank"
+                                        class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-[#FF7A00] hover:text-white transition-all transform hover:-translate-y-1">
+                                        <i class="ph-fill {{ $socialIcons[$type] ?? 'ph-link' }} text-xl"></i>
+                                    </a>
+                                @endif
+                            @endfor
+                        @else
+                            @if(!empty($platformSettings['social_facebook']) && $platformSettings['social_facebook'] !== '#')
+                                @php
+                                    $fbUrl = $platformSettings['social_facebook'];
+                                    if (!\Illuminate\Support\Str::startsWith($fbUrl, ['http://', 'https://', '//'])) {
+                                        $fbUrl = 'https://' . $fbUrl;
+                                    }
+                                @endphp
+                                <a href="{{ $fbUrl }}" target="_blank"
+                                    class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-[#FF7A00] hover:text-white transition-all transform hover:-translate-y-1">
+                                    <i class="ph-fill ph-facebook-logo text-xl"></i>
+                                </a>
+                            @endif
+                            @if(!empty($platformSettings['social_instagram']) && $platformSettings['social_instagram'] !== '#')
+                                @php
+                                    $igUrl = $platformSettings['social_instagram'];
+                                    if (!\Illuminate\Support\Str::startsWith($igUrl, ['http://', 'https://', '//'])) {
+                                        $igUrl = 'https://' . $igUrl;
+                                    }
+                                @endphp
+                                <a href="{{ $igUrl }}" target="_blank"
+                                    class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-[#FF7A00] hover:text-white transition-all transform hover:-translate-y-1">
+                                    <i class="ph-fill ph-instagram-logo text-xl"></i>
+                                </a>
+                            @endif
+                            @if(!empty($platformSettings['social_linkedin']) && $platformSettings['social_linkedin'] !== '#')
+                                @php
+                                    $liUrl = $platformSettings['social_linkedin'];
+                                    if (!\Illuminate\Support\Str::startsWith($liUrl, ['http://', 'https://', '//'])) {
+                                        $liUrl = 'https://' . $liUrl;
+                                    }
+                                @endphp
+                                <a href="{{ $liUrl }}" target="_blank"
+                                    class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-[#FF7A00] hover:text-white transition-all transform hover:-translate-y-1">
+                                    <i class="ph-fill ph-linkedin-logo text-xl"></i>
+                                </a>
+                            @endif
+                            @if(!empty($platformSettings['social_youtube']) && $platformSettings['social_youtube'] !== '#')
+                                @php
+                                    $ytUrl = $platformSettings['social_youtube'];
+                                    if (!\Illuminate\Support\Str::startsWith($ytUrl, ['http://', 'https://', '//'])) {
+                                        $ytUrl = 'https://' . $ytUrl;
+                                    }
+                                @endphp
+                                <a href="{{ $ytUrl }}" target="_blank"
+                                    class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-[#FF7A00] hover:text-white transition-all transform hover:-translate-y-1">
+                                    <i class="ph-fill ph-youtube-logo text-xl"></i>
+                                </a>
+                            @endif
+                        @endif
                     </div>
                 </div>
 
@@ -312,12 +393,6 @@
                                     <i
                                          class="ph-bold ph-caret-right text-[10px] opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0"></i>
                                     {{ $platformSettings['footer_col2_l2_text'] ?? 'Verificar Certificado' }}
-                                </a></li>
-                            <li><a href="{{ $platformSettings['footer_col2_l3_url'] ?? '#' }}"
-                                    class="text-gray-400 hover:text-[#FF7A00] transition-colors text-sm font-bold flex items-center gap-2 group">
-                                    <i
-                                        class="ph-bold ph-caret-right text-[10px] opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0"></i>
-                                    {{ $platformSettings['footer_col2_l3_text'] ?? 'Preguntas Frecuentes' }}
                                 </a></li>
                         </ul>
                     </div>

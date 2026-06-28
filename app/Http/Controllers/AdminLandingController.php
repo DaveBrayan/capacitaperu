@@ -35,7 +35,8 @@ class AdminLandingController extends Controller
             'about_eq_m2_img',
             'about_eq_m3_img',
             'about_eq_m4_img',
-            'contact_hero_bg'
+            'contact_hero_bg',
+            'home_pay_qr_img'
         ];
 
         $textFields = $request->except(array_merge(['_token', '_method'], $fileKeys));
