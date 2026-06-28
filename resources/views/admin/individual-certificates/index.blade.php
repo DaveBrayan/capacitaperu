@@ -172,8 +172,9 @@
         </div>
     </div>
 
-    <!-- MODAL DE DETALLES -->
-    <div id="detailsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 sm:p-6">
+    <!-- MODAL DE DETALLES (se teletransporta a body via JS) -->
+
+    <div id="detailsModal" class="fixed inset-0 z-[9999] items-center justify-center p-4 sm:p-6" style="display:none;">
         <div class="absolute inset-0 bg-[#001144]/40 backdrop-blur-sm transition-opacity" onclick="closeDetailsModal()"></div>
         <div class="relative w-full max-w-2xl bg-white shadow-2xl rounded-2xl flex flex-col transform scale-95 opacity-0 transition-all duration-300 ease-out max-h-[90vh]" id="detailsModalPanel">
             <!-- Header -->
@@ -232,7 +233,7 @@
     </div>
 
     <!-- MODAL DE FIRMAS -->
-    <div id="signaturesModal" class="fixed inset-0 z-[100] hidden">
+    <div id="signaturesModal" class="fixed inset-0 z-[9999]" style="display:none;">
         <div class="absolute inset-0 bg-[#001144]/40 backdrop-blur-sm transition-opacity" onclick="closeSignaturesModal()"></div>
         <div class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-out" id="signaturesModalPanel">
             <!-- Header -->
@@ -290,6 +291,16 @@
     </div>
 
     <script>
+        // Mover modales al body para evitar que overflow-hidden los recorte
+        document.addEventListener('DOMContentLoaded', function() {
+            var dm = document.getElementById('detailsModal');
+            var sm = document.getElementById('signaturesModal');
+            if (dm) document.body.appendChild(dm);
+            if (sm) document.body.appendChild(sm);
+        });
+    </script>
+
+    <script>
         const userPermissions = {
             view: {{ Auth::user()->hasPermission('individual-certificates.view') ? 'true' : 'false' }},
             edit: {{ Auth::user()->hasPermission('individual-certificates.edit') ? 'true' : 'false' }},
@@ -312,7 +323,7 @@
             modalStatus.className = 'text-sm font-bold ' + row.dataset.statusClass;
 
             // Mostrar el modal
-            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
             setTimeout(() => {
                 panel.classList.remove('scale-95', 'opacity-0');
                 panel.classList.add('scale-100', 'opacity-100');
@@ -337,8 +348,8 @@
                                         <a href="/certificado/ver/${s.uuid}" target="_blank" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all" title="Ver Certificado">
                                             <i class="ph-bold ph-eye"></i>
                                         </a>
-                                        \${userPermissions.students ? `
-                                        <button onclick="deleteModalStudent(\${s.id}, this)" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all" title="Eliminar Estudiante">
+                                        ${userPermissions.students ? `
+                                        <button onclick="deleteModalStudent(${s.id}, this)" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all" title="Eliminar Estudiante">
                                             <i class="ph-bold ph-trash"></i>
                                         </button>
                                         ` : ''}
@@ -396,13 +407,13 @@
             const panel = document.getElementById('detailsModalPanel');
             panel.classList.remove('scale-100', 'opacity-100');
             panel.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => modal.classList.add('hidden'), 300);
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
 
         function openSignaturesModal() {
             const modal = document.getElementById('signaturesModal');
             const panel = document.getElementById('signaturesModalPanel');
-            modal.classList.remove('hidden');
+            modal.style.display = 'block';
             setTimeout(() => {
                 panel.classList.remove('translate-x-full');
             }, 10);
@@ -425,7 +436,7 @@
             const panel = document.getElementById('signaturesModalPanel');
             panel.classList.add('translate-x-full');
             setTimeout(() => {
-                modal.classList.add('hidden');
+                modal.style.display = 'none';
             }, 300);
         }
 

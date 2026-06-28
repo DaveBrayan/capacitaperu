@@ -218,6 +218,9 @@
         </div>
     </div>
 
+    {{-- Modals portadas al body para evitar conflicto con overflow-hidden --}}
+    @stack('modals')
+
     <!-- Script para funcionalidad del sidebar móvil -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
