@@ -1,0 +1,117 @@
+<div class="space-y-12">
+    <!-- SECCIÓN: DATOS BÁSICOS -->
+    <div>
+        <div class="flex items-center gap-4 mb-8">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#001144] flex items-center justify-center shadow-sm">
+                <i class="ph-fill ph-identification-card text-2xl"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-black text-[#001144] tracking-tight">Datos del Programa</h3>
+                <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Información que aparecerá en el diploma</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Título -->
+            <div class="space-y-2 md:col-span-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Título del Curso / Programa</label>
+                <div class="relative group">
+                    <i class="ph-bold ph-text-t absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7A00] transition-colors"></i>
+                    <input type="text" name="title" value="{{ old('title', $certificate->title) }}" placeholder="Ej: Especialización en Gestión Pública" class="w-full pl-14 pr-6 py-4 rounded-[1.5rem] border border-gray-100 focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/5 outline-none transition-all text-sm font-bold text-[#001144] bg-gray-50/50 focus:bg-white" required>
+                </div>
+            </div>
+
+            <!-- Número de Registro -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Número de Registro (Nuevo)</label>
+                <div class="relative group">
+                    <i class="ph-bold ph-hash absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7A00] transition-colors"></i>
+                    <input type="text" name="registration_number" value="{{ old('registration_number', $certificate->registration_number) }}" placeholder="Ej: CP-2024-001" class="w-full pl-14 pr-6 py-4 rounded-[1.5rem] border border-gray-100 focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/5 outline-none transition-all text-sm font-bold text-[#001144] bg-gray-50/50 focus:bg-white">
+                </div>
+            </div>
+
+            <!-- Carga Horaria -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Carga Horaria (Horas)</label>
+                <div class="relative group">
+                    <i class="ph-bold ph-clock absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7A00] transition-colors"></i>
+                    <input type="number" name="hours" value="{{ old('hours', $certificate->hours) }}" placeholder="Ej: 120" class="w-full pl-14 pr-6 py-4 rounded-[1.5rem] border border-gray-100 focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/5 outline-none transition-all text-sm font-bold text-[#001144] bg-gray-50/50 focus:bg-white">
+                </div>
+            </div>
+
+
+
+            <!-- Categoría -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Categoría del Programa</label>
+                <div class="relative group">
+                    <i class="ph-bold ph-tag absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7A00] transition-colors"></i>
+                    <select name="category_id" class="w-full pl-14 pr-6 py-4 rounded-[1.5rem] border border-gray-100 focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/5 outline-none transition-all text-sm font-bold text-[#001144] bg-gray-50/50 focus:bg-white appearance-none" required>
+                        <option value="">Seleccionar Categoría</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ old('category_id', $certificate->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                    <i class="ph-bold ph-caret-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none"></i>
+                </div>
+            </div>
+
+            <!-- Fecha Inicio -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Fecha de Inicio</label>
+                <div class="relative group">
+                    <i class="ph-bold ph-calendar-blank absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7A00] transition-colors"></i>
+                    <input type="date" name="start_date" value="{{ old('start_date', $certificate->start_date ? $certificate->start_date->format('Y-m-d') : '') }}" class="w-full pl-14 pr-6 py-4 rounded-[1.5rem] border border-gray-100 focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/5 outline-none transition-all text-sm font-bold text-[#001144] bg-gray-50/50 focus:bg-white">
+                </div>
+            </div>
+
+            <!-- Fecha Fin -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Fecha de Finalización</label>
+                <div class="relative group">
+                    <i class="ph-bold ph-calendar-check absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7A00] transition-colors"></i>
+                    <input type="date" name="end_date" value="{{ old('end_date', $certificate->end_date ? $certificate->end_date->format('Y-m-d') : '') }}" class="w-full pl-14 pr-6 py-4 rounded-[1.5rem] border border-gray-100 focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/5 outline-none transition-all text-sm font-bold text-[#001144] bg-gray-50/50 focus:bg-white">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN: ESTADO -->
+    <div class="pt-8 border-t border-gray-100">
+        <div class="max-w-md">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-green-50 text-green-500 flex items-center justify-center">
+                    <i class="ph-fill ph-toggle-left text-xl"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black text-[#001144] uppercase tracking-wider">Estado del Registro</h4>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Control de visibilidad</p>
+                </div>
+            </div>
+
+            <div class="bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 space-y-4">
+                <label class="flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all {{ old('status', $certificate->status) == 'published' ? 'border-[#001144] bg-white' : 'border-transparent' }}">
+                    <input type="radio" name="status" value="published" class="hidden" {{ old('status', $certificate->status) == 'published' ? 'checked' : '' }} onchange="this.closest('div').querySelectorAll('label').forEach(l => l.classList.remove('border-[#001144]', 'bg-white')); this.parentElement.classList.add('border-[#001144]', 'bg-white')">
+                    <div class="w-10 h-10 rounded-xl bg-green-500 text-white flex items-center justify-center shadow-lg shadow-green-500/20">
+                        <i class="ph-bold ph-paper-plane-tilt"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-[#001144] uppercase tracking-widest">Publicado</p>
+                        <p class="text-[10px] text-gray-400 font-medium">Disponible para emitir certificados.</p>
+                    </div>
+                </label>
+
+                <label class="flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all {{ old('status', $certificate->status) == 'draft' ? 'border-[#FF7A00] bg-white' : 'border-transparent' }}">
+                    <input type="radio" name="status" value="draft" class="hidden" {{ old('status', $certificate->status) == 'draft' ? 'checked' : '' }} onchange="this.closest('div').querySelectorAll('label').forEach(l => l.classList.remove('border-[#001144]', 'bg-white')); this.parentElement.classList.add('border-[#FF7A00]', 'bg-white')">
+                    <div class="w-10 h-10 rounded-xl bg-gray-200 text-gray-500 flex items-center justify-center">
+                        <i class="ph-bold ph-pencil-line"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-gray-500 uppercase tracking-widest">Borrador</p>
+                        <p class="text-[10px] text-gray-400 font-medium">Solo visible para administradores.</p>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>

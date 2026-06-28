@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Video Game Design &amp; Development - EduFlow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"error-container": "#ffdad6", "on-surface": "#27180d", "on-primary-fixed-variant": "#753400", "tertiary-fixed": "#e3e2e2", "on-primary-fixed": "#321200", tertiary: "#5e5e5f", error: "#ba1a1a", "on-surface-variant": "#584235", "tertiary-container": "#a0a0a0", "primary-fixed-dim": "#ffb68b", "surface-container-lowest": "#ffffff", "on-secondary": "#ffffff", "secondary-fixed": "#dee1ff", "inverse-on-surface": "#ffede4", "surface-container": "#ffeade", "inverse-primary": "#ffb68b", "surface-dim": "#f1d4c2", "on-secondary-fixed-variant": "#0031c5", "secondary-fixed-dim": "#bac3ff", outline: "#8c7263", "on-secondary-fixed": "#001159", "on-tertiary-fixed-variant": "#464747", "tertiary-fixed-dim": "#c7c6c6", "on-tertiary-container": "#363737", "on-tertiary-fixed": "#1a1c1c", background: "#fff8f5", "primary-container": "#ff7a00", "surface-bright": "#fff8f5", "on-tertiary": "#ffffff", "on-primary-container": "#5c2800", "on-error": "#ffffff", "surface-container-highest": "#faddcb", "surface-variant": "#faddcb", secondary: "#284ade", "on-secondary-container": "#fffbff", "inverse-surface": "#3e2d21", "primary-fixed": "#ffdbc8", "surface-container-low": "#fff1e9", "on-error-container": "#93000a", primary: "#994700", "secondary-container": "#4766f8", "surface-tint": "#994700", "outline-variant": "#e0c0af", surface: "#fff8f5", "on-primary": "#ffffff", "surface-container-high": "#ffe3d2", "on-background": "#27180d"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {md: "24px", base: "8px", xs: "4px", "margin-desktop": "64px", "margin-mobile": "16px", sm: "12px", lg: "48px", gutter: "24px", xl: "80px"}, fontFamily: {"display-lg": ["Montserrat"], "headline-lg": ["Montserrat"], "headline-lg-mobile": ["Montserrat"], "body-lg": ["Inter"], "body-md": ["Inter"], "label-bold": ["Inter"], "headline-md": ["Montserrat"], headline: ["Montserrat"], display: ["Montserrat"], body: ["Inter"], label: ["Inter"]}, fontSize: {"display-lg": ["48px", {lineHeight: "56px", letterSpacing: "-1px", fontWeight: "700"}], "headline-lg": ["32px", {lineHeight: "40px", fontWeight: "700"}], "headline-lg-mobile": ["28px", {lineHeight: "36px", fontWeight: "700"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}], "label-bold": ["14px", {lineHeight: "20px", fontWeight: "600"}], "headline-md": ["24px", {lineHeight: "32px", fontWeight: "600"}]}}}};</script>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-lg shadow-sm">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 w-full max-w-[1280px] mx-auto">
+<!-- Brand Logo -->
+<a class="font-display-lg text-headline-md font-bold text-primary dark:text-primary-fixed-dim" href="#">
+                EduFlow
+            </a>
+<!-- Navigation Links -->
+<div class="hidden md:flex items-center gap-lg">
+<!-- Active Item determined contextually for this specific course landing page -->
+<a class="font-body-md text-body-md text-primary dark:text-primary-fixed-dim font-bold border-b-2 border-primary hover:scale-105 transition-transform duration-200" href="#">
+                    Courses
+                </a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:text-primary hover:scale-105 transition-transform duration-200" href="#">
+                    Paths
+                </a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:text-primary hover:scale-105 transition-transform duration-200" href="#">
+                    Community
+                </a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:text-primary hover:scale-105 transition-transform duration-200" href="#">
+                    Enterprise
+                </a>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-md">
+<div class="hidden md:flex items-center text-on-surface-variant hover:text-primary cursor-pointer">
+<span class="material-symbols-outlined">search</span>
+</div>
+<a class="hidden md:block font-label-bold text-label-bold text-secondary hover:text-primary transition-colors" href="#">
+                    Log In
+                </a>
+<a class="font-label-bold text-label-bold bg-primary-container text-on-primary-container px-md py-sm rounded-full hover:scale-105 transition-transform duration-200 shadow-sm" href="#">
+                    Sign Up
+                </a>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<header class="relative pt-32 pb-xl px-margin-mobile md:px-margin-desktop min-h-[870px] flex items-center justify-center overflow-hidden">
+<!-- Background Image with Glassmorphism overlay approach -->
+<div class="absolute inset-0 z-0">
+<img alt="" class="w-full h-full object-cover object-center opacity-80" data-alt="A highly detailed, vibrant 3D concept art environment from a modern video game, featuring a sprawling futuristic metropolis with neon accents glowing in vibrant oranges and deep blues. The lighting is dramatic and cinematic, emphasizing the high-contrast, tech-forward aesthetic. The scene is rendered in an ultra-realistic style with slight atmospheric haze, conveying a sense of high-velocity action and digital immersion perfectly suited for a game development course landing page." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVtSn07veu9KUXVsVR5Zq3fWAhojGbuKFXqeNZzMMWvDQNl9gkbyJKaSTicl3hX79-GEzpOKgo0Ur8op4Et0gQ1uclykps5UW3ERf8gxR9J5vUl29G6KlUEdxRWWaTS4SM_eJUxNBBsoQYueK2-gcPeaVBgMWtOsGgW3bSrNN7PQ0fIb7ioEA7P1WHal9T3a4JcfyPrZWMWs43DlI-eMgcLkrmB3V7NTqCtMzr5usLTsvnncrlJ1p30g11wBRKsjxARc-nFPjs76b4"/>
+<div class="absolute inset-0 bg-gradient-to-r from-surface via-surface/80 to-transparent"></div>
+</div>
+<div class="relative z-10 w-full max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-lg items-center">
+<div class="col-span-1 md:col-span-7 space-y-md">
+<div class="inline-flex items-center gap-sm px-sm py-xs bg-surface-container-high rounded-full border border-outline-variant w-fit shadow-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-label-bold text-label-bold text-on-surface-variant">Premium Masterclass</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-surface">
+                    Video Game Design &amp; Development
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                    Master Unreal Engine 5, 3D modeling, and advanced game logic. Go from an initial concept to a fully playable, polished console-ready prototype in this intensive, industry-aligned bootcamp.
+                </p>
+<div class="flex flex-wrap gap-md pt-sm">
+<a class="font-label-bold text-label-bold bg-primary-container text-on-primary-container px-lg py-sm rounded-full hover:scale-105 transition-transform duration-200 shadow-md flex items-center gap-sm" href="#">
+                        Enroll Now
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+<a class="font-label-bold text-label-bold border-2 border-secondary text-secondary px-lg py-sm rounded-full hover:bg-secondary hover:text-on-secondary transition-colors duration-200" href="#">
+                        View Syllabus
+                    </a>
+</div>
+</div>
+<!-- Floating Dynamic Element (Right Side Hero) -->
+<div class="hidden md:flex col-span-5 justify-end relative">
+<div class="bg-surface/60 backdrop-blur-xl border border-surface-container-highest rounded-2xl p-md shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-500 max-w-sm">
+<img alt="" class="w-full h-auto rounded-lg shadow-sm" data-alt="A close-up, high-fidelity screen capture of a video game engine interface showing a detailed wireframe model of a stylized sci-fi vehicle being actively edited. The interface panels feature deep blue and dark gray tones, contrasting with the bright vibrant orange selection highlights on the 3D model. The image conveys professional technical software proficiency within a modern, light-mode surrounding context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8TZ7Pi-H9Xvve7UPtc6VMJOGjVFD9iJQyImFhkIWEPM-aYppIkKBt0astmV8JCuyss9VBC4TkVdhWN5fy80gQqa8wXpNcPC1HdIp7z9oaCEqQCwkBSNlhET5xxXvWaJARruW7TmXt-6UdS8xay__m1gRJB2g1ioo9vtCZ-vB5MdJCD1lImLiXdaLl_321SVbduVaV0UT0wraEh4dFr8AsHi8NQMh2N6p3VmrRD7cZb5rVgcKamaB4dHsA6GEIKbcwzHxGULWrGNBX"/>
+<div class="mt-sm flex justify-between items-center">
+<span class="font-label-bold text-label-bold text-on-surface">Module 04: Rigging</span>
+<span class="material-symbols-outlined text-primary-container">check_circle</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Bento Grid Overview -->
+<section class="py-xl px-margin-mobile md:px-margin-desktop max-w-[1280px] mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-md">
+<div class="col-span-1 md:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-2xl p-lg flex flex-col justify-between shadow-sm relative overflow-hidden group">
+<div class="absolute -right-10 -top-10 opacity-5 group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-[200px]" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
+</div>
+<div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mb-xs">Level Up Your Career</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Built for ambitious creatives ready to enter the AAA studio ecosystem. No prior coding required, but a strong passion for gaming is mandatory.</p>
+</div>
+<div class="mt-lg flex gap-md">
+<div class="bg-surface-container py-xs px-sm rounded-md font-label-bold text-label-bold text-primary">Beginner Friendly</div>
+<div class="bg-surface-container py-xs px-sm rounded-md font-label-bold text-label-bold text-primary">Portfolio Building</div>
+</div>
+</div>
+<div class="col-span-1 bg-surface-container-lowest border border-outline-variant rounded-2xl p-lg flex flex-col items-center justify-center text-center shadow-sm">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center mb-sm shadow-sm">
+<span class="material-symbols-outlined text-[32px] text-primary" style="font-variation-settings: 'FILL' 1;">schedule</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface">12 Weeks</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Intensive pacing</p>
+</div>
+<div class="col-span-1 bg-surface-container-lowest border border-outline-variant rounded-2xl p-lg flex flex-col items-center justify-center text-center shadow-sm">
+<div class="w-16 h-16 rounded-full bg-secondary-fixed flex items-center justify-center mb-sm shadow-sm">
+<span class="material-symbols-outlined text-[32px] text-secondary" style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface">UE5 &amp; C++</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Industry tools</p>
+</div>
+</div>
+</section>
+<!-- Join The Studio Community Section (Asymmetric Layout) -->
+<section class="my-xl mx-margin-mobile md:mx-margin-desktop max-w-[1280px] md:mx-auto">
+<div class="bg-secondary rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row relative">
+<div class="p-xl md:w-1/2 flex flex-col justify-center z-10">
+<span class="font-label-bold text-label-bold text-secondary-fixed-dim uppercase tracking-wider mb-sm">Community First</span>
+<h2 class="font-display-lg text-headline-lg-mobile md:text-display-lg text-on-secondary mb-md">
+                    Join the Studio. Build Together.
+                </h2>
+<p class="font-body-lg text-body-lg text-on-secondary/80 mb-lg max-w-md">
+                    Learning game design is a team sport. Gain exclusive access to our Discord studio, collaborate on game jams, and get real-time feedback from industry veterans and peers.
+                </p>
+<a class="w-fit font-label-bold text-label-bold bg-surface-container-lowest text-secondary px-lg py-sm rounded-full hover:bg-surface-variant transition-colors duration-200 flex items-center gap-sm" href="#">
+<span class="material-symbols-outlined">forum</span>
+                    Explore the Community
+                </a>
+</div>
+<div class="md:w-1/2 relative min-h-[300px] md:min-h-full">
+<img alt="" class="absolute inset-0 w-full h-full object-cover opacity-90" data-alt="A vibrant, energetic candid photograph of a diverse team of young game developers collaborating around a large glowing monitor in a modern, well-lit studio space. They are enthusiastically pointing at the screen, celebrating a successful build. The lighting is bright and optimistic, with subtle vibrant orange and deep blue LED accents in the background, conveying a sense of high-velocity learning, professional growth, and active community engagement." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBquhYUg60m7fVSSI4TtvaebfiYH9E4xjxeIGKsdIcmkJSpltUcBm1ZTDIsaMJI2TQ9kE7m0G2ICpce_-bAKgfE_jAdck6TU-zE2IQYvi6UAeeB4jDhiacugz-fmfSbNkyVklhN3tncW7beqyCLtR8gyO-cP-LURjtzGWbAvKCVJq92GgcC2SqAcVQau8AwWed6foh9uCX4v3vpmr8-wOFfeye-KSnU4aj1fBQGcWA426_qwuT3BiBXWCmVenaJ69CrtooLmbLYok3n"/>
+<!-- Overlay gradient to blend image into background color -->
+<div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-l from-transparent via-secondary/40 to-secondary"></div>
+</div>
+</div>
+</section>
+<!-- Asset Showcase Grid -->
+<section class="py-xl px-margin-mobile md:px-margin-desktop bg-surface-container-low">
+<div class="max-w-[1280px] mx-auto">
+<div class="flex flex-col md:flex-row justify-between items-end mb-lg gap-sm">
+<div>
+<h2 class="font-display-lg text-headline-lg text-on-surface">Student Showcase</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-xs">Game-ready assets built by past cohorts.</p>
+</div>
+<a class="font-label-bold text-label-bold text-primary hover:text-primary-container flex items-center gap-xs" href="#">
+                    View full gallery <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-sm md:gap-md">
+<!-- Asset Card 1 -->
+<div class="group relative rounded-xl overflow-hidden bg-surface shadow-sm border border-outline-variant aspect-square">
+<img alt="" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A high-fidelity 3D render of a stylized sci-fi warrior character model, standing in a dynamic action pose. The character features intricate armor details with glowing orange accents against dark metallic materials. The lighting is studio-quality, highlighting the textures and surface imperfections. The overall aesthetic is professional, polished, and aligns with high-end modern video game production standards." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAz4HRDzrDkH45IT4WFomyAKaUrfFSLLaFcVvQ7tXQAsv2YTgDxhvlygcKOJ7hxOPEpYgcTLe8_0JQQRLNoJQy7KyNMJLGSrpT3vKrjT95TlcteG-Sla2epGJywTpc-ECwderyfOQyXUUiHSWOePrkdd8Ucq9pca_2TGPzhOK27lOzoPrCUbs0V1uLVnEnnI-xi1stgcJIMx2PGzjX5j1mWUWEj1sOw1tYlSiIPDqXNp3LVVTkIt7M83YEbU8yhnuWXrPmjqi7N1tFg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-sm">
+<span class="font-label-bold text-label-bold text-on-secondary">Character Design - Week 4</span>
+</div>
+</div>
+<!-- Asset Card 2 -->
+<div class="group relative rounded-xl overflow-hidden bg-surface shadow-sm border border-outline-variant aspect-square">
+<img alt="" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A beautifully lit, isometric view of a stylized fantasy game environment level blockout. The scene includes stylized low-poly trees, a small stone bridge, and glowing magical crystals in deep blue hues. The lighting is soft and ambient, casting gentle shadows. This asset showcase piece demonstrates professional level design and environmental storytelling within a bright, modern light-mode context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCC-lEwKbItrNbMfhzJG2gUIitj6yQjE342aLBWPZd66KmT505lAv_k-bO_YwJFUcOV1NHUe1CCwP5x6NAB4-pKiuQu6kywFxQs28boT68E6O7ekHMhwCgl7NlQmtoQukr_2u2Zf2rwXCO6E5xwnm5Tc0t-ASXQdw3vV2D6vJbSi8_j2kRnF17PVYjqAJV9wy5VCJm0TBy1WHKA7nmo81OY1OeyKty8W5POhcwTshqK57XDmnFvsBgRTf_MpjYSVgNceiB5I01Q0o6c"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-sm">
+<span class="font-label-bold text-label-bold text-on-secondary">Level Design - Week 8</span>
+</div>
+</div>
+<!-- Asset Card 3 -->
+<div class="group relative rounded-xl overflow-hidden bg-surface shadow-sm border border-outline-variant aspect-square">
+<img alt="" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A detailed close-up 3D render of a stylized futuristic weapon prop, showcasing hard-surface modeling techniques. The weapon features a sleek, geometric design with matte white panels and deep blue energy cores. The image is rendered with a clean, high-key studio lighting setup that perfectly highlights the bevels and edge wear, conveying a high-velocity learning output." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1s_LyuzpOx6m8TUqj5xriP5ITvEjtqigvDiAkyZrZfTY-WQAUZmhj8nG76iJkHHkNvn6lJ8eb-ml2GHTwnfMHwqIa6LhcMnZmLKTa-ahiz4jK86crfukmzKByRkauJyswvya7xJ3Gai3_1-6EHxC1dqYrIa9lV3fRu1Ax27i5blbfEAqDH19K0G4DSBSneA298_4asDzIasaFoz6K4IBamwyt293tu53jV-oROIBiUOVlR0EWY6tDVQCieCOak_GH-wzm0Bp9NIYv"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-sm">
+<span class="font-label-bold text-label-bold text-on-secondary">Hard Surface Prop - Week 6</span>
+</div>
+</div>
+<!-- Asset Card 4 -->
+<div class="group relative rounded-xl overflow-hidden bg-surface shadow-sm border border-outline-variant aspect-square">
+<img alt="" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A dynamic screenshot capturing a moment of gameplay from a top-down action prototype. The scene shows vibrant particle effects bursting in orange and yellow hues against a high-contrast dark arena floor. The interface is clean and minimal. This image represents the final interactive project output, demonstrating coding and visual effects integration in a polished, professional style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpY-SPlOhbBdkVoFEmtULvvgZWCa1vpmV4hcmDUgwUsv1vRg1pPKeiUpiRPmhtY2Ag3cURAw9-0DbeIjlLtUQo8vqHfaLRo4EjcyutD9CPnTy0N43Kw99qI9XuY_ulm4Z2UWM1-dHiqvKhhPV99jMN7WvX8HxWn5fE-exETlDasODU2KLAyAU5bhYeaYKUF0g6xn2oWjI6_GxwW-waJAI7qzZOmk3OfEEN-AwA5FQUC-N38JxB1OBWO7A2KDjEIl4YqgLIPG_UnAj3"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-sm">
+<span class="font-label-bold text-label-bold text-on-secondary">Final Prototype - Week 12</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="w-full py-xl bg-surface-container-highest dark:bg-inverse-surface">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-lg px-margin-mobile md:px-margin-desktop max-w-[1280px] mx-auto">
+<div class="col-span-1 md:col-span-1 flex flex-col gap-sm">
+<a class="font-display-lg text-headline-md font-bold text-on-surface dark:text-inverse-on-surface" href="#">
+                    EduFlow
+                </a>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-fixed-variant mt-sm">
+                    Empowering the next generation of digital creators and tech leaders through high-velocity learning.
+                </p>
+</div>
+<div class="col-span-1 flex flex-col gap-sm">
+<h4 class="font-label-bold text-label-bold text-on-surface dark:text-inverse-on-surface uppercase tracking-wide">Platform</h4>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:text-on-surface hover:text-primary transition-colors focus:ring-2 focus:ring-primary w-fit" href="#">About Us</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:text-on-surface hover:text-primary transition-colors focus:ring-2 focus:ring-primary w-fit" href="#">Careers</a>
+</div>
+<div class="col-span-1 flex flex-col gap-sm">
+<h4 class="font-label-bold text-label-bold text-on-surface dark:text-inverse-on-surface uppercase tracking-wide">Legal</h4>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:text-on-surface hover:text-primary transition-colors focus:ring-2 focus:ring-primary w-fit" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:text-on-surface hover:text-primary transition-colors focus:ring-2 focus:ring-primary w-fit" href="#">Terms of Service</a>
+</div>
+<div class="col-span-1 flex flex-col gap-sm">
+<h4 class="font-label-bold text-label-bold text-on-surface dark:text-inverse-on-surface uppercase tracking-wide">Support</h4>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:text-on-surface hover:text-primary transition-colors focus:ring-2 focus:ring-primary w-fit" href="#">Help Center</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:text-on-surface hover:text-primary transition-colors focus:ring-2 focus:ring-primary w-fit" href="#">Contact</a>
+</div>
+</div>
+<div class="px-margin-mobile md:px-margin-desktop max-w-[1280px] mx-auto mt-xl pt-lg border-t border-outline-variant/30 text-center">
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-on-tertiary-fixed-variant">
+                © 2024 EduFlow Inc. All rights reserved.
+            </p>
+</div>
+</footer>
+</body></html>
