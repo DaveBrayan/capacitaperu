@@ -251,9 +251,17 @@
                                     <a href="{{ $waUrl }}" target="_blank" class="block w-full py-4 bg-[#25D366] text-white font-black rounded-2xl shadow-xl shadow-green-200/50 hover:bg-[#1fb355] hover:-translate-y-1 transition-all text-center flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
                                         <i class="ph-fill ph-whatsapp-logo text-xl"></i> Inscribirme por WhatsApp
                                     </a>
-                                    <a href="{{ route('cart') }}" class="block w-full py-4 bg-[#001144] text-white font-black rounded-2xl hover:bg-[#FF7A00] transition-all text-center uppercase tracking-widest text-xs">
+                                    <button data-course-btn data-course-id="{{ $course->id }}" data-is-detail="true"
+                                            onclick="addToCart({
+                                        id: {{ $course->id }},
+                                        title: '{{ addslashes($course->title) }}',
+                                        price: {{ $course->final_price }},
+                                        original_price: {{ $course->price }},
+                                        cover: '{{ $coverImage }}',
+                                        instructor: '{{ addslashes($course->instructor ? $course->instructor->name : 'CapacitaPerú') }}'
+                                    })" class="block w-full py-4 bg-[#001144] text-white font-black rounded-2xl hover:bg-[#FF7A00] transition-all text-center uppercase tracking-widest text-xs cursor-pointer">
                                         Añadir al Carrito
-                                    </a>
+                                    </button>
                                 </div>
 
                                 <!-- Beneficios Checklist -->

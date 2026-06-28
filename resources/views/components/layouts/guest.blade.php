@@ -128,6 +128,12 @@
 
                 <!-- Botones Dinámicos (Desktop) -->
                 <div class="hidden md:flex items-center gap-4">
+                    <!-- Carrito Icono -->
+                    <a href="{{ route('cart') }}" class="relative w-12 h-12 bg-white border border-gray-100 hover:border-[#FF7A00]/30 rounded-2xl flex items-center justify-center text-[#001144] hover:text-[#FF7A00] transition-all shadow-md group shrink-0">
+                        <i class="ph-bold ph-shopping-cart text-xl group-hover:scale-110 transition-transform"></i>
+                        <span id="cart-badge" class="absolute -top-1.5 -right-1.5 bg-[#FF7A00] text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-md hidden">0</span>
+                    </a>
+
                     @auth('web')
                         <a href="{{ route('admin.dashboard') }}"
                             class="bg-[#0033CC] text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-[#0033CC]/20 hover:bg-[#FF7A00] transition-all flex items-center gap-2">
@@ -151,6 +157,12 @@
 
                 <!-- Botón Móvil -->
                 <div class="md:hidden flex items-center gap-4">
+                    <!-- Carrito Icono Móvil -->
+                    <a href="{{ route('cart') }}" class="relative text-[#001144] hover:text-[#FF7A00] text-2xl p-1.5">
+                        <i class="ph-bold ph-shopping-cart"></i>
+                        <span id="cart-badge-mobile" class="absolute -top-1.5 -right-1.5 bg-[#FF7A00] text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-md hidden">0</span>
+                    </a>
+
                     @auth('student')
                         <a href="{{ route('student.dashboard') }}" class="text-[#0AD1C8] text-2xl"><i
                                 class="ph-bold ph-user-circle"></i></a>
@@ -426,9 +438,180 @@
         </button>
     </div>
 
-    <!-- Script para el menú móvil -->
+    <!-- Script para el menú móvil y carrito -->
     <script>
+        // Funciones del Carrito Globales
+        window.getCart = function() {
+            try {
+                return JSON.parse(localStorage.getItem('capacitaperu_cart')) || [];
+            } catch(e) {
+                return [];
+            }
+        };
+
+        window.saveCart = function(cart) {
+            localStorage.setItem('capacitaperu_cart', JSON.stringify(cart));
+            window.updateCartBadges();
+            if (typeof window.updateCatalogCartButtons === 'function') {
+                window.updateCatalogCartButtons();
+            }
+        };
+
+        window.updateCatalogCartButtons = function() {
+            const cart = window.getCart();
+            document.querySelectorAll('[data-course-btn]').forEach(btn => {
+                const courseId = parseInt(btn.dataset.courseId);
+                const isDetail = btn.dataset.isDetail === "true";
+                
+                if (cart.some(item => item.id === courseId)) {
+                    btn.disabled = true;
+                    if (isDetail) {
+                        btn.innerHTML = '<i class="ph-bold ph-check text-base"></i> Ya en tu Carrito';
+                        btn.className = 'block w-full py-4 bg-gray-100 text-gray-400 font-black rounded-2xl text-center uppercase tracking-widest text-xs cursor-not-allowed';
+                    } else {
+                        btn.innerHTML = '<i class="ph-bold ph-check text-base"></i> En tu Carrito';
+                        btn.className = 'bg-gray-100 text-gray-400 text-center py-3 rounded-xl font-black text-[9px] uppercase tracking-widest cursor-not-allowed flex items-center justify-center gap-1.5 w-full';
+                    }
+                } else {
+                    btn.disabled = false;
+                    if (isDetail) {
+                        btn.innerHTML = 'Añadir al Carrito';
+                        btn.className = 'block w-full py-4 bg-[#001144] text-white font-black rounded-2xl hover:bg-[#FF7A00] transition-all text-center uppercase tracking-widest text-xs cursor-pointer';
+                    } else {
+                        btn.innerHTML = '<i class="ph-bold ph-shopping-cart-simple text-base"></i> + Carrito';
+                        btn.className = 'bg-[#25D366] text-white text-center py-3 rounded-xl font-black text-[9px] hover:bg-[#1fb355] transition-all shadow-xl shadow-green-200/30 flex items-center justify-center gap-1.5 uppercase tracking-widest cursor-pointer w-full';
+                    }
+                }
+            });
+        };
+
+        window.addToCart = function(item, redirect = true) {
+            let cart = window.getCart();
+            if (!cart.some(c => c.id === item.id)) {
+                cart.push(item);
+                window.saveCart(cart);
+            }
+            if (redirect) {
+                window.location.href = "{{ route('cart') }}";
+            }
+        };
+
+        window.animateFlyToCart = function(button, item) {
+            // Add silently
+            window.addToCart(item, false);
+
+            // Find image to animate
+            const card = button.closest('.group');
+            if (!card) return;
+            const img = card.querySelector('img');
+            if (!img) return;
+
+            // Target badge
+            let target = document.getElementById('cart-badge');
+            if (!target || target.offsetParent === null) {
+                target = document.getElementById('cart-badge-mobile');
+            }
+            if (!target) return;
+
+            const imgRect = img.getBoundingClientRect();
+            const targetRect = target.getBoundingClientRect();
+
+            // Create flyer
+            const flyer = document.createElement('img');
+            flyer.src = img.src;
+            flyer.style.position = 'fixed';
+            flyer.style.left = `${imgRect.left}px`;
+            flyer.style.top = `${imgRect.top}px`;
+            flyer.style.width = `${imgRect.width}px`;
+            flyer.style.height = `${imgRect.height}px`;
+            flyer.style.borderRadius = '1rem';
+            flyer.style.zIndex = '9999';
+            flyer.style.pointerEvents = 'none';
+            flyer.style.transition = 'all 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+            flyer.style.boxShadow = '0 10px 25px rgba(255, 122, 0, 0.4)';
+            flyer.style.opacity = '1';
+
+            document.body.appendChild(flyer);
+
+            // Animate
+            requestAnimationFrame(() => {
+                flyer.style.left = `${targetRect.left + (targetRect.width / 2) - 15}px`;
+                flyer.style.top = `${targetRect.top + (targetRect.height / 2) - 15}px`;
+                flyer.style.width = '30px';
+                flyer.style.height = '30px';
+                flyer.style.opacity = '0.3';
+                flyer.style.transform = 'rotate(360deg) scale(0.1)';
+            });
+
+            // Cleanup & visual feedback
+            setTimeout(() => {
+                flyer.remove();
+                const cartParent = target.closest('a');
+                if (cartParent) {
+                    cartParent.classList.add('scale-110', 'border-[#FF7A00]', 'bg-orange-50/10');
+                    setTimeout(() => {
+                        cartParent.classList.remove('scale-110', 'border-[#FF7A00]', 'bg-orange-50/10');
+                    }, 300);
+                }
+            }, 800);
+
+            // Button feedback
+            const originalHtml = button.innerHTML;
+            const originalClass = button.className;
+            
+            button.disabled = true;
+            button.innerHTML = '<i class="ph-bold ph-check-circle text-base"></i> ¡Agregado!';
+            button.classList.remove('bg-[#25D366]');
+            button.classList.add('bg-[#0033CC]');
+
+            setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+                button.className = originalClass;
+            }, 2000);
+        };
+
+        window.removeFromCart = function(id) {
+            let cart = window.getCart();
+            cart = cart.filter(c => c.id !== id);
+            window.saveCart(cart);
+            window.dispatchEvent(new Event('cartUpdated'));
+        };
+
+        window.updateCartBadges = function() {
+            const cart = window.getCart();
+            const count = cart.length;
+            
+            const badge = document.getElementById('cart-badge');
+            const badgeMobile = document.getElementById('cart-badge-mobile');
+            
+            if (badge) {
+                if (count > 0) {
+                    badge.innerText = count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+            
+            if (badgeMobile) {
+                if (count > 0) {
+                    badgeMobile.innerText = count;
+                    badgeMobile.classList.remove('hidden');
+                } else {
+                    badgeMobile.classList.add('hidden');
+                }
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', function () {
+            // Inicializar badges de carrito
+            window.updateCartBadges();
+            window.updateCatalogCartButtons();
+            
+            // Escuchar cambios
+            window.addEventListener('cartUpdated', window.updateCatalogCartButtons);
+
             // Lógica WhatsApp
             const trigger = document.getElementById('whatsapp-trigger');
             const menu = document.getElementById('whatsapp-menu');

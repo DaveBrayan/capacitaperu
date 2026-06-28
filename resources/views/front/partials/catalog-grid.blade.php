@@ -77,9 +77,17 @@
 
                 <!-- Botones Lado a Lado -->
                 <div class="grid grid-cols-2 gap-2">
-                    <a href="{{ $waUrl }}" target="_blank" class="bg-[#25D366] text-white text-center py-3 rounded-xl font-black text-[9px] hover:bg-[#1fb355] transition-all shadow-xl shadow-green-200/30 flex items-center justify-center gap-1.5 uppercase tracking-widest">
-                        <i class="ph-fill ph-whatsapp-logo text-base"></i> Inscripción
-                    </a>
+                    <button data-course-btn data-course-id="{{ $course->id }}"
+                            onclick="animateFlyToCart(this, {
+                        id: {{ $course->id }},
+                        title: '{{ addslashes($course->title) }}',
+                        price: {{ $finalPrice }},
+                        original_price: {{ $originalPrice }},
+                        cover: '{{ $course->cover_image ? asset($course->cover_image) : 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800&auto=format&fit=crop' }}',
+                        instructor: '{{ addslashes($course->instructor ? $course->instructor->name : 'CapacitaPerú') }}'
+                    })" class="bg-[#25D366] text-white text-center py-3 rounded-xl font-black text-[9px] hover:bg-[#1fb355] transition-all shadow-xl shadow-green-200/30 flex items-center justify-center gap-1.5 uppercase tracking-widest cursor-pointer w-full">
+                        <i class="ph-bold ph-shopping-cart-simple text-base"></i> + Carrito
+                    </button>
                     <a href="{{ route('course.show', $course->slug) }}" class="bg-[#001144] text-white text-center py-3 rounded-xl font-black text-[9px] hover:bg-[#FF7A00] transition-all shadow-xl shadow-blue-200/30 flex items-center justify-center gap-1.5 uppercase tracking-widest">
                         <i class="ph-bold ph-eye text-base"></i> Detalles
                     </a>
