@@ -186,7 +186,7 @@
                         <div>
                             <span class="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Programa / Curso Dictado</span>
                             <p class="text-xs font-extrabold text-[#001144] leading-snug">
-                                {{ $certificate->course->title }}
+                                {{ $certificate->course?->title ?? $certificate->title }}
                             </p>
                         </div>
                         <div class="pt-3 border-t border-slate-100">
@@ -254,10 +254,10 @@
         const templateData = @json($certificate->certificate_template ?? []);
         const realData = {
             student_name: @json($certificate->instructor->name),
-            course_title: @json($certificate->course->title),
+            course_title: @json($certificate->course?->title ?? $certificate->title),
             instructor_name: @json($certificate->instructor->name),
             date: @json($fmtDate($certificate->end_date ?? $certificate->created_at)),
-            hours: @json($certificate->hours ?? $certificate->course->duration ?? ''),
+            hours: @json($certificate->hours ?? $certificate->course?->duration ?? ''),
             start_date: @json($certificate->start_date ? $fmtDate($certificate->start_date) : ''),
             end_date: @json($certificate->end_date ? $fmtDate($certificate->end_date) : ''),
             registration_number: @json($certificate->registration_number ?: $certificate->uuid),

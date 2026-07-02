@@ -160,10 +160,12 @@ class AdminCourseCertificateController extends Controller
 
             $certificate->save();
 
-            // Link to the new course
-            $course = Course::findOrFail($request->course_id);
-            $course->course_certificate_id = $certificate->id;
-            $course->save();
+            // Link to the new course if course_id is set
+            if ($request->filled('course_id')) {
+                $course = Course::findOrFail($request->course_id);
+                $course->course_certificate_id = $certificate->id;
+                $course->save();
+            }
 
             DB::commit();
             $targetTab = $request->input('active_tab', 'info');
