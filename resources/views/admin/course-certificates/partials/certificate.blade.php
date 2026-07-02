@@ -145,7 +145,7 @@
             role: "DIRECTOR ACADÉMICO",
             signature: "{{ $academic_signature ? asset($academic_signature) : null }}" 
         },
-        studentExample: "JUAN PÉREZ DE LA CRUZ",
+        studentExample: @json($certificate->instructor?->name ?? 'Nombre Docente'),
         startDate: @json($fmtDate($certificate->start_date) ?? '11 de octubre del 2025'),
         endDate: @json($fmtDate($certificate->end_date) ?? '03 de noviembre del 2025'),
         hours: @json($certificate->hours ?? '80'),
@@ -223,7 +223,7 @@
 
             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Textos Dinámicos</p>
             <button type="button" onclick="addElement('student_name')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3 hover:border-blue-400 transition-all text-left group">
-                <i class="ph-bold ph-student text-lg text-gray-400 group-hover:text-blue-500"></i><span class="text-xs font-bold text-gray-600">Nombre Estudiante</span>
+                <i class="ph-bold ph-student text-lg text-gray-400 group-hover:text-blue-500"></i><span class="text-xs font-bold text-gray-600">Nombre Docente</span>
             </button>
             <button type="button" onclick="addElement('course_title')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3 hover:border-blue-400 transition-all text-left group">
                 <i class="ph-bold ph-graduation-cap text-lg text-gray-400 group-hover:text-blue-500"></i><span class="text-xs font-bold text-gray-600">Título Curso</span>

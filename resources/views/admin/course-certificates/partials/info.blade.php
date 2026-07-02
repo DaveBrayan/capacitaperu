@@ -49,7 +49,7 @@
                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Título de la Plantilla de Certificado <span class="text-red-500">*</span></label>
                 <div class="relative group">
                     <i class="ph-bold ph-text-t absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7A00] transition-colors"></i>
-                    <input type="text" name="title" id="title" value="{{ old('title', $certificate->title) }}" placeholder="Ej: Certificado - Especialización en Gestión Pública" class="w-full pl-14 pr-6 py-4 rounded-[1.5rem] border border-gray-100 focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/5 outline-none transition-all text-sm font-bold text-[#001144] bg-gray-50/50 focus:bg-white" required>
+                    <input type="text" name="title" id="title" value="{{ old('title', $certificate->title) }}" placeholder="Ej: Especialización en Gestión Pública" class="w-full pl-14 pr-6 py-4 rounded-[1.5rem] border border-gray-100 focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/5 outline-none transition-all text-sm font-bold text-[#001144] bg-gray-50/50 focus:bg-white" required>
                 </div>
             </div>
 
@@ -199,8 +199,8 @@
                 const courseTitle = selectedOption.text.replace(/^\[.*?\]\s*/, '');
                 
                 // Update template title if it is default or empty
-                if (!titleInput.value || titleInput.value.startsWith('Certificado - ')) {
-                    titleInput.value = 'Certificado - ' + courseTitle;
+                if (!titleInput.value || titleInput.value.includes('Certificado - ')) {
+                    titleInput.value = courseTitle;
                 }
                 
                 // Update canvas metadata in real-time (Step 2)

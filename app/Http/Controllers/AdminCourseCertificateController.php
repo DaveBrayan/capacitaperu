@@ -32,7 +32,7 @@ class AdminCourseCertificateController extends Controller
             $certificate->course_id = $selectedCourseId;
             $course = Course::find($selectedCourseId);
             if ($course) {
-                $certificate->title = 'Certificado - ' . $course->title;
+                $certificate->title = $course->title;
                 $certificate->instructor_id = $course->instructor_id;
                 $certificate->hours = $course->duration;
                 
