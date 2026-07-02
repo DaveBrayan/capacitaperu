@@ -408,19 +408,21 @@
                 .then(res => res.json())
                 .then(data => {
                     const courses = data.courses;
+                    const indCerts = data.instructor_individual_certificates || [];
                     
-                    if (courses.length === 0) {
-                        coursesListTable.innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center text-gray-400 font-medium">Este docente no tiene cursos asignados actualmente.</td></tr>`;
+                    if (courses.length === 0 && indCerts.length === 0) {
+                        coursesListTable.innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center text-gray-400 font-medium">Este docente no tiene cursos ni certificados individuales.</td></tr>`;
                         return;
                     }
                     
                     let html = '';
+                    
+                    // 1. Cursos
                     courses.forEach(course => {
                         const isDiploma = course.type === 'diploma';
                         const badgeClass = isDiploma ? 'text-purple-600 bg-purple-50 border-purple-100' : 'text-blue-600 bg-blue-50 border-blue-100';
                         const badgeText = isDiploma ? 'Diplomado' : 'Curso';
                         
-                        // Determinar contenido de la columna Acción
                         let actionHtml = '';
                         if (course.course_certificate_id && course.course_certificate) {
                             actionHtml = `
@@ -434,14 +436,6 @@
                                     <button type="button" onclick="deleteCertificate(${course.course_certificate_id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Eliminar Certificado">
                                         <i class="ph-bold ph-trash text-xs"></i> Eliminar
                                     </button>
-                                </div>
-                            `;
-                        } else if (course.individual_certificate_id) {
-                            actionHtml = `
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <a href="/admin/individual-certificates/${course.individual_certificate_id}/edit" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Editar Diseño">
-                                        <i class="ph-bold ph-pencil-simple text-xs"></i> Editar
-                                    </a>
                                 </div>
                             `;
                         } else {
@@ -458,6 +452,46 @@
                                 <td class="px-6 py-5">
                                     <span class="inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase border ${badgeClass}">
                                         ${badgeText}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-5 text-center">
+                                    ${actionHtml}
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    // 2. Certificados Individuales del docente
+                    indCerts.forEach(cert => {
+                        let actionHtml = '';
+                        if (cert.course_certificate) {
+                            actionHtml = `
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <a href="/certificado-docente/ver/${cert.course_certificate.uuid}" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Ver Certificado de Docente">
+                                        <i class="ph-bold ph-eye text-xs"></i> Ver
+                                    </a>
+                                    <a href="/admin/certificados-cursos/${cert.course_certificate.id}/edit" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Editar Diseño">
+                                        <i class="ph-bold ph-pencil-simple text-xs"></i> Editar
+                                    </a>
+                                    <button type="button" onclick="deleteCertificate(${cert.course_certificate.id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Eliminar Certificado">
+                                        <i class="ph-bold ph-trash text-xs"></i> Eliminar
+                                    </button>
+                                </div>
+                            `;
+                        } else {
+                            actionHtml = `
+                                <a href="/admin/certificados-cursos/create?individual_certificate_id=${cert.id}" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#001144]/5 text-[#001144] hover:bg-[#FF7A00] hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Crear certificado para docente">
+                                    <i class="ph-bold ph-plus text-xs"></i> Crear
+                                </a>
+                            `;
+                        }
+
+                        html += `
+                            <tr class="hover:bg-gray-50/50 transition-colors border-t border-dashed border-gray-100">
+                                <td class="px-6 py-5 font-bold text-[#001144]">${cert.title}</td>
+                                <td class="px-6 py-5">
+                                    <span class="inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase border text-amber-600 bg-amber-50 border-amber-100">
+                                        Individual
                                     </span>
                                 </td>
                                 <td class="px-6 py-5 text-center">

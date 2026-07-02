@@ -12,6 +12,7 @@ class CourseCertificate extends Model
     protected $fillable = [
         'uuid',
         'course_id',
+        'individual_certificate_id',
         'instructor_id',
         'title',
         'registration_number',
@@ -49,6 +50,11 @@ class CourseCertificate extends Model
         'start_date' => 'date',
         'end_date' => 'date',
     ];
+
+    public function individualCertificate()
+    {
+        return $this->belongsTo(IndividualCertificate::class);
+    }
 
     public function course()
     {

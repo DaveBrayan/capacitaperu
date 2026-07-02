@@ -24,6 +24,7 @@ class AdminCourseCertificateController extends Controller
     public function create(Request $request)
     {
         $selectedCourseId = $request->query('course_id');
+        $selectedIndividualId = $request->query('individual_certificate_id');
         $courses = Course::orderBy('title')->get();
         $instructors = Instructor::where('status', 'active')->get();
         $certificate = new CourseCertificate();
@@ -44,6 +45,16 @@ class AdminCourseCertificateController extends Controller
                     $certificate->end_date = $course->metadata['end_date'];
                 }
             }
+        } elseif ($selectedIndividualId) {
+            $certificate->individual_certificate_id = $selectedIndividualId;
+            $indCert = \App\Models\IndividualCertificate::find($selectedIndividualId);
+            if ($indCert) {
+                $certificate->title = $indCert->title;
+                $certificate->instructor_id = $indCert->instructor_id;
+                $certificate->hours = $indCert->hours;
+                $certificate->start_date = $indCert->start_date;
+                $certificate->end_date = $indCert->end_date;
+            }
         }
         
         return view('admin.course-certificates.create', compact('courses', 'instructors', 'certificate'));
@@ -53,7 +64,8 @@ class AdminCourseCertificateController extends Controller
     {
         $request->validate([
             'title' => 'required|max:255',
-            'course_id' => 'required|exists:courses,id',
+            'course_id' => 'nullable|exists:courses,id',
+            'individual_certificate_id' => 'nullable|exists:individual_certificates,id',
             'instructor_id' => 'nullable|exists:instructors,id',
             'registration_number' => 'nullable|string',
             'hours' => 'nullable|integer',
@@ -64,6 +76,7 @@ class AdminCourseCertificateController extends Controller
             $certificate = new CourseCertificate();
             $certificate->title = $request->title;
             $certificate->course_id = $request->course_id;
+            $certificate->individual_certificate_id = $request->individual_certificate_id;
             $certificate->instructor_id = $request->instructor_id;
             $certificate->registration_number = $request->registration_number;
             $certificate->hours = $request->hours;
@@ -78,10 +91,12 @@ class AdminCourseCertificateController extends Controller
 
             $certificate->save();
 
-            // Link this certificate back to the course
-            $course = Course::findOrFail($request->course_id);
-            $course->course_certificate_id = $certificate->id;
-            $course->save();
+            // Link this certificate back to the course if course_id is set
+            if ($request->filled('course_id')) {
+                $course = Course::findOrFail($request->course_id);
+                $course->course_certificate_id = $certificate->id;
+                $course->save();
+            }
 
             DB::commit();
             $targetTab = $request->input('active_tab', 'info');
@@ -113,7 +128,8 @@ class AdminCourseCertificateController extends Controller
 
         $request->validate([
             'title' => 'required|max:255',
-            'course_id' => 'required|exists:courses,id',
+            'course_id' => 'nullable|exists:courses,id',
+            'individual_certificate_id' => 'nullable|exists:individual_certificates,id',
             'instructor_id' => 'nullable|exists:instructors,id',
         ]);
 
@@ -130,6 +146,7 @@ class AdminCourseCertificateController extends Controller
 
             $certificate->title = $request->title;
             $certificate->course_id = $request->course_id;
+            $certificate->individual_certificate_id = $request->individual_certificate_id;
             $certificate->instructor_id = $request->instructor_id;
             $certificate->registration_number = $request->registration_number;
             $certificate->hours = $request->hours;

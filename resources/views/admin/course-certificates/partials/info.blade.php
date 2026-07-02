@@ -32,6 +32,10 @@
                 </div>
             </div>
 
+            <!-- individual_certificate_id hidden input -->
+            <input type="hidden" name="individual_certificate_id" value="{{ old('individual_certificate_id', $certificate->individual_certificate_id) }}">
+
+            @if(!$certificate->individual_certificate_id)
             <!-- Curso / Diplomado -->
             <div class="space-y-2 md:col-span-2">
                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Curso o Diplomado <span class="text-red-500">*</span></label>
@@ -43,6 +47,7 @@
                     <i class="ph-bold ph-caret-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none"></i>
                 </div>
             </div>
+            @endif
 
             <!-- Título del Certificado -->
             <div class="space-y-2 md:col-span-2">
@@ -141,6 +146,7 @@
         const initialCourseId = "{{ old('course_id', $certificate->course_id) }}";
 
         function filterCoursesByInstructor() {
+            if (!courseSelect) return;
             const instructorId = instructorSelect.value;
             
             // Clear current options
@@ -192,26 +198,28 @@
         });
 
         // Event listener for course change
-        courseSelect.addEventListener('change', function() {
-            const selectedOption = courseSelect.options[courseSelect.selectedIndex];
-            if (selectedOption && selectedOption.value) {
-                // Strip the type prefix like "[CURSO] "
-                const courseTitle = selectedOption.text.replace(/^\[.*?\]\s*/, '');
-                
-                // Update template title if it is default or empty
-                if (!titleInput.value || titleInput.value.includes('Certificado - ')) {
-                    titleInput.value = courseTitle;
-                }
-                
-                // Update canvas metadata in real-time (Step 2)
-                if (window.courseMeta) {
-                    window.courseMeta.title = courseTitle;
-                    if (typeof window.updateDynamicElements === 'function') {
-                        window.updateDynamicElements();
+        if (courseSelect) {
+            courseSelect.addEventListener('change', function() {
+                const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    // Strip the type prefix like "[CURSO] "
+                    const courseTitle = selectedOption.text.replace(/^\[.*?\]\s*/, '');
+                    
+                    // Update template title if it is default or empty
+                    if (!titleInput.value || titleInput.value.includes('Certificado - ')) {
+                        titleInput.value = courseTitle;
+                    }
+                    
+                    // Update canvas metadata in real-time (Step 2)
+                    if (window.courseMeta) {
+                        window.courseMeta.title = courseTitle;
+                        if (typeof window.updateDynamicElements === 'function') {
+                            window.updateDynamicElements();
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
         // Run initial filtering
         filterCoursesByInstructor();

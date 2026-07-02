@@ -26,8 +26,10 @@ class AdminIndividualCertificateController extends Controller
     {
         $instructors = Instructor::where('status', 'active')->get();
         $categories = Category::where('status', true)->get();
+        $courses = \App\Models\Course::where('status', 'published')->get();
         $certificate = new IndividualCertificate();
-        return view('admin.individual-certificates.create', compact('instructors', 'categories', 'certificate'));
+        $linkedCourseId = null;
+        return view('admin.individual-certificates.create', compact('instructors', 'categories', 'courses', 'certificate', 'linkedCourseId'));
     }
 
     public function store(Request $request)
@@ -57,6 +59,16 @@ class AdminIndividualCertificateController extends Controller
             }
 
             $certificate->save();
+
+            // Link to course
+            if ($request->filled('course_id')) {
+                \App\Models\Course::where('individual_certificate_id', $certificate->id)->update(['individual_certificate_id' => null]);
+                $course = \App\Models\Course::find($request->course_id);
+                if ($course) {
+                    $course->individual_certificate_id = $certificate->id;
+                    $course->save();
+                }
+            }
 
             if ($request->filled('students_json')) {
                 $students = json_decode($request->students_json, true);
@@ -167,11 +179,13 @@ class AdminIndividualCertificateController extends Controller
         $certificate = IndividualCertificate::with(['students.user'])->findOrFail($id);
         $instructors = Instructor::where('status', 'active')->get();
         $categories = Category::where('status', true)->get();
+        $courses = \App\Models\Course::where('status', 'published')->get();
+        $linkedCourseId = \App\Models\Course::where('individual_certificate_id', $certificate->id)->value('id');
 
         $executive_signature = \App\Models\Setting::where('key', 'individual_cert_executive_signature')->value('value');
         $academic_signature = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
 
-        return view('admin.individual-certificates.create', compact('certificate', 'instructors', 'categories', 'executive_signature', 'academic_signature'));
+        return view('admin.individual-certificates.create', compact('certificate', 'instructors', 'categories', 'courses', 'linkedCourseId', 'executive_signature', 'academic_signature'));
     }
 
     public function update(Request $request, $id)
@@ -198,6 +212,16 @@ class AdminIndividualCertificateController extends Controller
             }
 
             $certificate->save();
+
+            // Link to course
+            \App\Models\Course::where('individual_certificate_id', $certificate->id)->update(['individual_certificate_id' => null]);
+            if ($request->filled('course_id')) {
+                $course = \App\Models\Course::find($request->course_id);
+                if ($course) {
+                    $course->individual_certificate_id = $certificate->id;
+                    $course->save();
+                }
+            }
 
             if ($request->filled('students_json')) {
                 $students = json_decode($request->students_json, true);
@@ -355,7 +379,7 @@ class AdminIndividualCertificateController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $certificate = IndividualCertificate::findOrFail($id);
         
@@ -367,7 +391,15 @@ class AdminIndividualCertificateController extends Controller
             }
         }
         
+        // Unlink from course first
+        \App\Models\Course::where('individual_certificate_id', $certificate->id)->update(['individual_certificate_id' => null]);
+        
         $certificate->delete();
+        
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Certificado eliminado.']);
+        }
+        
         return redirect()->route('admin.individual-certificates.index')->with('success', 'Certificado eliminado.');
     }
 

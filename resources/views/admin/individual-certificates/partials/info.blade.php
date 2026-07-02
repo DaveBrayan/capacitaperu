@@ -39,6 +39,28 @@
                 </div>
             </div>
 
+            <!-- Docente / Instructor -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Docente / Instructor <span class="text-red-500">*</span></label>
+                <div class="relative group">
+                    <i class="ph-bold ph-user-circle absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7A00] transition-colors"></i>
+                    <select name="instructor_id" id="instructor_id" class="w-full pl-14 pr-12 py-4 rounded-[1.5rem] border border-gray-100 focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/5 outline-none transition-all text-sm font-bold text-[#001144] bg-gray-50/50 focus:bg-white appearance-none" required>
+                        <option value="">Seleccionar Docente / Instructor</option>
+                        @foreach($instructors as $instructor)
+                            <option value="{{ $instructor->id }}" 
+                                    data-cert-name="{{ $instructor->certificate_name ?? $instructor->name }}" 
+                                    data-signature="{{ $instructor->signature_url ? asset($instructor->signature_url) : '' }}"
+                                    {{ old('instructor_id', $certificate->instructor_id) == $instructor->id ? 'selected' : '' }}>
+                                {{ $instructor->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <i class="ph-bold ph-caret-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none"></i>
+                </div>
+            </div>
+
+
+
 
 
             <!-- Categoría -->
@@ -115,3 +137,28 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const instructorSelect = document.getElementById('instructor_id');
+
+        // Event listener for instructor change
+        instructorSelect.addEventListener('change', function() {
+            // Update canvas metadata in real-time (Step 2)
+            if (window.courseMeta && window.courseMeta.instructor) {
+                const selectedOption = instructorSelect.options[instructorSelect.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    const certName = selectedOption.getAttribute('data-cert-name') || selectedOption.text;
+                    const signature = selectedOption.getAttribute('data-signature') || null;
+                    
+                    window.courseMeta.instructor.name = certName;
+                    window.courseMeta.instructor.signature = signature;
+                    
+                    if (typeof window.updateDynamicElements === 'function') {
+                        window.updateDynamicElements();
+                    }
+                }
+            }
+        });
+    });
+</script>

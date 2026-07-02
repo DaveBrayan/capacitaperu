@@ -50,6 +50,11 @@ class IndividualCertificate extends Model
         return $this->hasMany(IndividualCertificateStudent::class, 'individual_certificate_id');
     }
 
+    public function courseCertificate()
+    {
+        return $this->hasOne(CourseCertificate::class, 'individual_certificate_id');
+    }
+
     protected static function boot()
     {
         parent::boot();

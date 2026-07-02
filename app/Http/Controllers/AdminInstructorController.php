@@ -158,12 +158,19 @@ class AdminInstructorController extends Controller
             ->get();
         $individualCertificates = \App\Models\IndividualCertificate::where('status', 'published')->orderBy('title')->select('id', 'title')->get();
         $courseCertificates = \App\Models\CourseCertificate::where('status', 'published')->orderBy('title')->select('id', 'title')->get();
+        
+        // Fetch specific instructor individual certificates with their teacher certificates
+        $instructorIndividualCertificates = \App\Models\IndividualCertificate::where('instructor_id', $id)
+            ->with(['courseCertificate:id,uuid,individual_certificate_id'])
+            ->select('id', 'title', 'status')
+            ->get();
 
         return response()->json([
             'instructor_name' => $instructor->name,
             'courses' => $courses,
             'individual_certificates' => $individualCertificates,
             'course_certificates' => $courseCertificates,
+            'instructor_individual_certificates' => $instructorIndividualCertificates
         ]);
     }
 
