@@ -2,6 +2,8 @@
     <x-slot name="title">Gestión de Docentes</x-slot>
     <x-slot name="header">Docentes</x-slot>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- Header Actions -->
     <div class="flex flex-col md:flex-row justify-between items-center gap-6 mb-10 fade-in-up">
         <div class="relative w-full md:w-96 group">
@@ -478,27 +480,71 @@
         }
 
         function deleteCertificate(certId) {
-            if (!confirm('¿Seguro que desea eliminar este certificado? Se desvinculará del curso.')) return;
-            
-            fetch(`/admin/certificados-cursos/${certId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Se eliminará de forma permanente este certificado y se desvinculará del curso.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#001144',
+                cancelButtonColor: '#EF4444',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    popup: 'rounded-[2.5rem]',
+                    confirmButton: 'rounded-xl font-black uppercase tracking-widest text-[10px] px-8 py-4',
+                    cancelButton: 'rounded-xl font-black uppercase tracking-widest text-[10px] px-8 py-4'
                 }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Recargar modal
-                    openInstructorCertificatesModal(currentInstructorId, currentInstructorName);
-                } else {
-                    alert('Error al eliminar el certificado: ' + (data.message || 'Desconocido'));
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/certificados-cursos/${certId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminado',
+                                text: 'El certificado ha sido eliminado con éxito.',
+                                icon: 'success',
+                                confirmButtonColor: '#001144',
+                                customClass: {
+                                    popup: 'rounded-[2.5rem]',
+                                    confirmButton: 'rounded-xl font-black uppercase tracking-widest text-[10px] px-8 py-4'
+                                }
+                            });
+                            // Recargar modal
+                            openInstructorCertificatesModal(currentInstructorId, currentInstructorName);
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'No se pudo eliminar.',
+                                icon: 'error',
+                                confirmButtonColor: '#001144',
+                                customClass: {
+                                    popup: 'rounded-[2.5rem]',
+                                    confirmButton: 'rounded-xl font-black uppercase tracking-widest text-[10px] px-8 py-4'
+                                }
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar.',
+                            icon: 'error',
+                            confirmButtonColor: '#001144',
+                            customClass: {
+                                popup: 'rounded-[2.5rem]',
+                                confirmButton: 'rounded-xl font-black uppercase tracking-widest text-[10px] px-8 py-4'
+                            }
+                        });
+                    });
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Error de conexión al eliminar.');
             });
         }
     </script>
@@ -509,4 +555,6 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #00114410; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #00114420; }
     </style>
+
+
 </x-layouts.admin>
