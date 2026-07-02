@@ -160,7 +160,7 @@ class AdminCourseCertificateController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $certificate = CourseCertificate::findOrFail($id);
         
@@ -175,10 +175,20 @@ class AdminCourseCertificateController extends Controller
 
             $certificate->delete();
             DB::commit();
+            
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'Certificado eliminado.']);
+            }
+            
             return redirect()->route('admin.course-certificates.index')->with('success', 'Certificado eliminado.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error deleting course certificate: ' . $e->getMessage());
+            
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Error al eliminar el certificado.']);
+            }
+            
             return redirect()->route('admin.course-certificates.index')->with('error', 'Error al eliminar el certificado.');
         }
     }

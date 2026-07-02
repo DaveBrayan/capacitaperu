@@ -364,14 +364,13 @@
                                     <tr>
                                         <th class="px-6 py-4">Curso / Diplomado</th>
                                         <th class="px-6 py-4">Tipo</th>
-                                        <th class="px-6 py-4">Certificado Vinculado</th>
                                         <th class="px-6 py-4 text-center">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody id="instructor-courses-list" class="divide-y divide-gray-50 text-xs text-gray-700">
                                     <!-- Carga dinámica -->
                                     <tr>
-                                        <td colspan="4" class="px-6 py-10 text-center italic text-gray-400">Cargando cursos...</td>
+                                        <td colspan="3" class="px-6 py-10 text-center italic text-gray-400">Cargando cursos...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -399,7 +398,7 @@
             currentInstructorName = instructorName;
             
             certsInstructorName.innerText = "Docente: " + instructorName;
-            coursesListTable.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center italic text-gray-400"><i class="ph-bold ph-spinner animate-spin text-lg mr-2"></i> Cargando cursos y certificados...</td></tr>`;
+            coursesListTable.innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center italic text-gray-400"><i class="ph-bold ph-spinner animate-spin text-lg mr-2"></i> Cargando cursos y certificados...</td></tr>`;
             
             certsModal.classList.remove('hidden');
             
@@ -407,11 +406,9 @@
                 .then(res => res.json())
                 .then(data => {
                     const courses = data.courses;
-                    const individualCerts = data.individual_certificates;
-                    const courseCerts = data.course_certificates;
                     
                     if (courses.length === 0) {
-                        coursesListTable.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-gray-400 font-medium">Este docente no tiene cursos asignados actualmente.</td></tr>`;
+                        coursesListTable.innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center text-gray-400 font-medium">Este docente no tiene cursos asignados actualmente.</td></tr>`;
                         return;
                     }
                     
@@ -420,27 +417,6 @@
                         const isDiploma = course.type === 'diploma';
                         const badgeClass = isDiploma ? 'text-purple-600 bg-purple-50 border-purple-100' : 'text-blue-600 bg-blue-50 border-blue-100';
                         const badgeText = isDiploma ? 'Diplomado' : 'Curso';
-                        
-                        // Generar opciones para el select
-                        let options = `<option value="none">Ninguno (Usar plantilla del curso)</option>`;
-                        
-                        if (courseCerts.length > 0) {
-                            options += `<optgroup label="Certificados de Cursos/Diplomados">`;
-                            courseCerts.forEach(c => {
-                                const selected = course.course_certificate_id == c.id ? 'selected' : '';
-                                options += `<option value="course:${c.id}" ${selected}>${c.title}</option>`;
-                            });
-                            options += `</optgroup>`;
-                        }
-                        
-                        if (individualCerts.length > 0) {
-                            options += `<optgroup label="Certificados Individuales">`;
-                            individualCerts.forEach(c => {
-                                const selected = course.individual_certificate_id == c.id ? 'selected' : '';
-                                options += `<option value="individual:${c.id}" ${selected}>${c.title}</option>`;
-                            });
-                            options += `</optgroup>`;
-                        }
                         
                         // Determinar contenido de la columna Acción
                         let actionHtml = '';
@@ -453,6 +429,9 @@
                                     <a href="/admin/certificados-cursos/${course.course_certificate_id}/edit" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Editar Diseño">
                                         <i class="ph-bold ph-pencil-simple text-xs"></i> Editar
                                     </a>
+                                    <button type="button" onclick="deleteCertificate(${course.course_certificate_id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Eliminar Certificado">
+                                        <i class="ph-bold ph-trash text-xs"></i> Eliminar
+                                    </button>
                                 </div>
                             `;
                         } else if (course.individual_certificate_id) {
@@ -479,13 +458,6 @@
                                         ${badgeText}
                                     </span>
                                 </td>
-                                <td class="px-6 py-5">
-                                    <div class="relative min-w-[250px]">
-                                        <select onchange="linkCertificate(${course.id}, this)" class="w-full px-4 py-2.5 rounded-xl border border-gray-100 focus:border-[#FF7A00] focus:ring-2 focus:ring-[#FF7A00]/10 outline-none text-xs font-bold text-[#001144] bg-gray-50 cursor-pointer">
-                                            ${options}
-                                        </select>
-                                    </div>
-                                </td>
                                 <td class="px-6 py-5 text-center">
                                     ${actionHtml}
                                 </td>
@@ -497,7 +469,7 @@
                 })
                 .catch(err => {
                     console.error(err);
-                    coursesListTable.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-red-500 font-bold">Error al cargar la información. Intente nuevamente.</td></tr>`;
+                    coursesListTable.innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center text-red-500 font-bold">Error al cargar la información. Intente nuevamente.</td></tr>`;
                 });
         }
 
@@ -505,60 +477,28 @@
             certsModal.classList.add('hidden');
         }
 
-        function linkCertificate(courseId, selectElement) {
-            const val = selectElement.value;
-            let certType = 'none';
-            let certId = null;
+        function deleteCertificate(certId) {
+            if (!confirm('¿Seguro que desea eliminar este certificado? Se desvinculará del curso.')) return;
             
-            if (val.startsWith('individual:')) {
-                certType = 'individual';
-                certId = val.split(':')[1];
-            } else if (val.startsWith('course:')) {
-                certType = 'course';
-                certId = val.split(':')[1];
-            }
-            
-            // Animación de guardando
-            selectElement.disabled = true;
-            const parent = selectElement.parentElement;
-            const spinner = document.createElement('span');
-            spinner.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-gray-400';
-            spinner.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-sm"></i>';
-            parent.appendChild(spinner);
-            
-            fetch(`/admin/cursos/${courseId}/vincular-certificado`, {
-                method: 'POST',
+            fetch(`/admin/certificados-cursos/${certId}`, {
+                method: 'DELETE',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    certificate_type: certType,
-                    certificate_id: certId
-                })
+                }
             })
             .then(res => res.json())
             .then(data => {
-                spinner.remove();
-                selectElement.disabled = false;
                 if (data.success) {
-                    // Feedback visual rápido
-                    selectElement.classList.add('border-green-500', 'bg-green-50/50');
-                    setTimeout(() => {
-                        selectElement.classList.remove('border-green-500', 'bg-green-50/50');
-                        // Recargar modal para actualizar los botones de acción
-                        openInstructorCertificatesModal(currentInstructorId, currentInstructorName);
-                    }, 1000);
+                    // Recargar modal
+                    openInstructorCertificatesModal(currentInstructorId, currentInstructorName);
                 } else {
-                    alert('Error al vincular el certificado: ' + (data.message || 'Desconocido'));
+                    alert('Error al eliminar el certificado: ' + (data.message || 'Desconocido'));
                 }
             })
             .catch(err => {
-                spinner.remove();
-                selectElement.disabled = false;
                 console.error(err);
-                alert('Error de conexión al guardar la vinculación.');
+                alert('Error de conexión al eliminar.');
             });
         }
     </script>

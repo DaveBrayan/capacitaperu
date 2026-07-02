@@ -211,12 +211,7 @@
                     <span id="btn-text" class="uppercase tracking-widest text-xs">Descargar PDF</span>
                 </button>
 
-                <!-- Botón Volver al Buscador -->
-                <a href="{{ route('front.certificate.individual.search') }}"
-                    class="w-full py-2.5 bg-white border-2 border-slate-100 text-slate-400 font-black rounded-2xl hover:bg-slate-50 hover:text-[#001144] hover:border-[#001144] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-[9px] mb-4">
-                    <i class="ph-bold ph-magnifying-glass text-md"></i>
-                    Volver al Buscador
-                </a>
+
 
                 <!-- Info Empresa -->
                 <div class="bg-[#001144] rounded-2xl shadow-2xl overflow-hidden text-white">
