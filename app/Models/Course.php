@@ -87,6 +87,27 @@ class Course extends Model
 
     // --- RELACIONES FALTANTES AGREGADAS ---
 
+    public function individualCertificate()
+    {
+        return $this->belongsTo(IndividualCertificate::class, 'individual_certificate_id');
+    }
+
+    public function courseCertificate()
+    {
+        return $this->belongsTo(CourseCertificate::class, 'course_certificate_id');
+    }
+
+    public function getActiveCertificateTemplateAttribute()
+    {
+        if ($this->individual_certificate_id && $this->individualCertificate) {
+            return $this->individualCertificate->certificate_template;
+        }
+        if ($this->course_certificate_id && $this->courseCertificate) {
+            return $this->courseCertificate->certificate_template;
+        }
+        return $this->certificate_template;
+    }
+
     // 1. Relación con Inscripciones (Enrollments)
     public function enrollments()
     {

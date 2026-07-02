@@ -22,15 +22,17 @@
         @forelse($instructors as $instructor)
         <div class="bg-white rounded-[2.5rem] border border-gray-100 p-8 hover:shadow-2xl hover:shadow-gray-200/50 transition-all group relative flex flex-col h-full border-b-4 border-b-transparent hover:border-b-[#FF7A00]">
             
-            <!-- Acciones Flotantes -->
-            @if(Auth::user()->hasPermission('instructors.manage'))
+            <!-- Acciones Flotantes -->            @if(Auth::user()->hasPermission('instructors.manage'))
             <div class="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 z-10">
-                <button onclick="editModal({{ json_encode($instructor) }})" class="w-10 h-10 bg-white/90 backdrop-blur rounded-xl text-[#001144] hover:bg-[#001144] hover:text-white shadow-lg border border-gray-100 flex items-center justify-center transition-all">
+                <button onclick="openInstructorCertificatesModal({{ $instructor->id }}, '{{ addslashes($instructor->name) }}')" class="w-10 h-10 bg-white/90 backdrop-blur rounded-xl text-yellow-600 hover:bg-yellow-600 hover:text-white shadow-lg border border-gray-100 flex items-center justify-center transition-all" title="Vincular Certificados">
+                    <i class="ph-bold ph-certificate"></i>
+                </button>
+                <button onclick="editModal({{ json_encode($instructor) }})" class="w-10 h-10 bg-white/90 backdrop-blur rounded-xl text-[#001144] hover:bg-[#001144] hover:text-white shadow-lg border border-gray-100 flex items-center justify-center transition-all" title="Editar">
                     <i class="ph-bold ph-pencil-simple"></i>
                 </button>
                 <form action="{{ route('admin.instructors.destroy', $instructor->id) }}" method="POST" onsubmit="return confirm('¿Eliminar docente?');" class="inline">
                     @csrf @method('DELETE')
-                    <button type="submit" class="w-10 h-10 bg-white/90 backdrop-blur rounded-xl text-red-500 hover:bg-red-500 hover:text-white shadow-lg border border-gray-100 flex items-center justify-center transition-all">
+                    <button type="submit" class="w-10 h-10 bg-white/90 backdrop-blur rounded-xl text-red-500 hover:bg-red-500 hover:text-white shadow-lg border border-gray-100 flex items-center justify-center transition-all" title="Eliminar">
                         <i class="ph-bold ph-trash"></i>
                     </button>
                 </form>
@@ -329,6 +331,235 @@
                 }
                 reader.readAsDataURL(input.files[0]);
             }
+        }
+    </script>
+
+    <!-- MODAL VINCULAR CERTIFICADOS A CURSOS DEL DOCENTE -->
+    <div id="instructor-certs-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-[#001144]/40 backdrop-blur-md transition-opacity" onclick="closeCertsModal()"></div>
+        
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-[2.5rem] bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-4xl border border-white/20">
+                    
+                    <div class="bg-white px-8 py-6 border-b border-gray-50 flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-[#FF7A00]">
+                                <i class="ph-fill ph-certificate text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-black text-[#001144] tracking-tight">Certificados de Cursos</h3>
+                                <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest" id="certs-modal-instructor-name">Docente: ...</p>
+                            </div>
+                        </div>
+                        <button onclick="closeCertsModal()" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50">
+                            <i class="ph-bold ph-x text-xl"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                        <div class="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-4">Curso / Diplomado</th>
+                                        <th class="px-6 py-4">Tipo</th>
+                                        <th class="px-6 py-4">Certificado Vinculado</th>
+                                        <th class="px-6 py-4 text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="instructor-courses-list" class="divide-y divide-gray-50 text-xs text-gray-700">
+                                    <!-- Carga dinámica -->
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-10 text-center italic text-gray-400">Cargando cursos...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50/50 px-8 py-6 flex justify-end border-t border-gray-50 rounded-b-[2.5rem]">
+                        <button type="button" onclick="closeCertsModal()" class="px-8 py-4 bg-white border border-gray-100 text-[#001144] rounded-[1.2rem] hover:bg-gray-50 text-[10px] font-black uppercase tracking-widest transition-all">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const certsModal = document.getElementById('instructor-certs-modal');
+        const certsInstructorName = document.getElementById('certs-modal-instructor-name');
+        const coursesListTable = document.getElementById('instructor-courses-list');
+
+        let currentInstructorId = null;
+        let currentInstructorName = "";
+
+        function openInstructorCertificatesModal(instructorId, instructorName) {
+            currentInstructorId = instructorId;
+            currentInstructorName = instructorName;
+            
+            certsInstructorName.innerText = "Docente: " + instructorName;
+            coursesListTable.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center italic text-gray-400"><i class="ph-bold ph-spinner animate-spin text-lg mr-2"></i> Cargando cursos y certificados...</td></tr>`;
+            
+            certsModal.classList.remove('hidden');
+            
+            fetch(`/admin/docentes/${instructorId}/cursos-certificados`)
+                .then(res => res.json())
+                .then(data => {
+                    const courses = data.courses;
+                    const individualCerts = data.individual_certificates;
+                    const courseCerts = data.course_certificates;
+                    
+                    if (courses.length === 0) {
+                        coursesListTable.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-gray-400 font-medium">Este docente no tiene cursos asignados actualmente.</td></tr>`;
+                        return;
+                    }
+                    
+                    let html = '';
+                    courses.forEach(course => {
+                        const isDiploma = course.type === 'diploma';
+                        const badgeClass = isDiploma ? 'text-purple-600 bg-purple-50 border-purple-100' : 'text-blue-600 bg-blue-50 border-blue-100';
+                        const badgeText = isDiploma ? 'Diplomado' : 'Curso';
+                        
+                        // Generar opciones para el select
+                        let options = `<option value="none">Ninguno (Usar plantilla del curso)</option>`;
+                        
+                        if (courseCerts.length > 0) {
+                            options += `<optgroup label="Certificados de Cursos/Diplomados">`;
+                            courseCerts.forEach(c => {
+                                const selected = course.course_certificate_id == c.id ? 'selected' : '';
+                                options += `<option value="course:${c.id}" ${selected}>${c.title}</option>`;
+                            });
+                            options += `</optgroup>`;
+                        }
+                        
+                        if (individualCerts.length > 0) {
+                            options += `<optgroup label="Certificados Individuales">`;
+                            individualCerts.forEach(c => {
+                                const selected = course.individual_certificate_id == c.id ? 'selected' : '';
+                                options += `<option value="individual:${c.id}" ${selected}>${c.title}</option>`;
+                            });
+                            options += `</optgroup>`;
+                        }
+                        
+                        // Determinar contenido de la columna Acción
+                        let actionHtml = '';
+                        if (course.course_certificate_id && course.course_certificate) {
+                            actionHtml = `
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <a href="/certificado-docente/ver/${course.course_certificate.uuid}" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Ver Certificado de Docente">
+                                        <i class="ph-bold ph-eye text-xs"></i> Ver
+                                    </a>
+                                    <a href="/admin/certificados-cursos/${course.course_certificate_id}/edit" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Editar Diseño">
+                                        <i class="ph-bold ph-pencil-simple text-xs"></i> Editar
+                                    </a>
+                                </div>
+                            `;
+                        } else if (course.individual_certificate_id) {
+                            actionHtml = `
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <a href="/admin/individual-certificates/${course.individual_certificate_id}/edit" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Editar Diseño">
+                                        <i class="ph-bold ph-pencil-simple text-xs"></i> Editar
+                                    </a>
+                                </div>
+                            `;
+                        } else {
+                            actionHtml = `
+                                <a href="/admin/certificados-cursos/create?course_id=${course.id}" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#001144]/5 text-[#001144] hover:bg-[#FF7A00] hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all" title="Crear certificado para este curso">
+                                    <i class="ph-bold ph-plus text-xs"></i> Crear
+                                </a>
+                            `;
+                        }
+                        
+                        html += `
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-6 py-5 font-bold text-[#001144]">${course.title}</td>
+                                <td class="px-6 py-5">
+                                    <span class="inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase border ${badgeClass}">
+                                        ${badgeText}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-5">
+                                    <div class="relative min-w-[250px]">
+                                        <select onchange="linkCertificate(${course.id}, this)" class="w-full px-4 py-2.5 rounded-xl border border-gray-100 focus:border-[#FF7A00] focus:ring-2 focus:ring-[#FF7A00]/10 outline-none text-xs font-bold text-[#001144] bg-gray-50 cursor-pointer">
+                                            ${options}
+                                        </select>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5 text-center">
+                                    ${actionHtml}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    coursesListTable.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error(err);
+                    coursesListTable.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-red-500 font-bold">Error al cargar la información. Intente nuevamente.</td></tr>`;
+                });
+        }
+
+        function closeCertsModal() {
+            certsModal.classList.add('hidden');
+        }
+
+        function linkCertificate(courseId, selectElement) {
+            const val = selectElement.value;
+            let certType = 'none';
+            let certId = null;
+            
+            if (val.startsWith('individual:')) {
+                certType = 'individual';
+                certId = val.split(':')[1];
+            } else if (val.startsWith('course:')) {
+                certType = 'course';
+                certId = val.split(':')[1];
+            }
+            
+            // Animación de guardando
+            selectElement.disabled = true;
+            const parent = selectElement.parentElement;
+            const spinner = document.createElement('span');
+            spinner.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-gray-400';
+            spinner.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-sm"></i>';
+            parent.appendChild(spinner);
+            
+            fetch(`/admin/cursos/${courseId}/vincular-certificado`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    certificate_type: certType,
+                    certificate_id: certId
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                spinner.remove();
+                selectElement.disabled = false;
+                if (data.success) {
+                    // Feedback visual rápido
+                    selectElement.classList.add('border-green-500', 'bg-green-50/50');
+                    setTimeout(() => {
+                        selectElement.classList.remove('border-green-500', 'bg-green-50/50');
+                        // Recargar modal para actualizar los botones de acción
+                        openInstructorCertificatesModal(currentInstructorId, currentInstructorName);
+                    }, 1000);
+                } else {
+                    alert('Error al vincular el certificado: ' + (data.message || 'Desconocido'));
+                }
+            })
+            .catch(err => {
+                spinner.remove();
+                selectElement.disabled = false;
+                console.error(err);
+                alert('Error de conexión al guardar la vinculación.');
+            });
         }
     </script>
 

@@ -93,7 +93,7 @@ class CertificateController extends Controller
         }
 
         // 6. Validar Fecha de Publicación
-        $certConfig = $course->certificate_template ?? [];
+        $certConfig = $course->active_certificate_template ?? [];
         $releaseMode = $certConfig['release_mode'] ?? 'completion';
         
         if ($releaseMode === 'scheduled' && !empty($certConfig['release_date'])) {

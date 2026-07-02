@@ -87,6 +87,9 @@ Route::get('/certificado', [\App\Http\Controllers\Front\PublicCertificateControl
 Route::get('/certificado/ver/{uuid}', [\App\Http\Controllers\Front\PublicCertificateController::class, 'showPublic'])->name('front.certificate.individual.view');
 Route::get('/certificado/slug/{slug}', [\App\Http\Controllers\AdminIndividualCertificateController::class, 'showPublic'])->name('front.certificate.individual');
 
+// --- CERTIFICADOS DE DOCENTES (VISTA PÚBLICA) ---
+Route::get('/certificado-docente/ver/{uuid}', [\App\Http\Controllers\AdminCourseCertificateController::class, 'viewTeacherCertificate'])->name('teacher-certificate.view');
+
 // Servidor de Media Privado/Público
 Route::get('/public-media/{filename}', function ($filename) {
     $path = storage_path('app/public/media/' . $filename);
@@ -202,8 +205,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:web', 'setup.check'])-
     Route::resource('diplomados', AdminCourseController::class)->names('diplomas');
     Route::resource('docentes', AdminInstructorController::class)->names('instructors');
     Route::get('/docentes/firma/{filename}', [AdminInstructorController::class, 'getSignature'])->name('instructors.signature');
+    Route::get('/docentes/{id}/cursos-certificados', [AdminInstructorController::class, 'getCoursesWithCertificates'])->name('instructors.courses-certificates');
+    Route::post('/cursos/{id}/vincular-certificado', [AdminInstructorController::class, 'linkCertificateToCourse'])->name('courses.link-certificate');
     Route::resource('categorias', AdminCategoryController::class)->names('categories');
     Route::resource('certificados-individuales', \App\Http\Controllers\AdminIndividualCertificateController::class)->names('individual-certificates');
+    Route::resource('certificados-cursos', \App\Http\Controllers\AdminCourseCertificateController::class)->names('course-certificates');
     Route::get('individual-certificates/global/firmas', [\App\Http\Controllers\AdminIndividualCertificateController::class, 'getSignatures'])->name('individual-certificates.get-signatures');
     Route::post('individual-certificates/global/firmas', [\App\Http\Controllers\AdminIndividualCertificateController::class, 'updateSignatures'])->name('individual-certificates.update-signatures');
     

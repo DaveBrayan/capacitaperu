@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Instructor;
+use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -146,5 +147,48 @@ class AdminInstructorController extends Controller
         $response->header("Content-Type", $type);
 
         return $response;
+    }
+
+    public function getCoursesWithCertificates($id)
+    {
+        $instructor = Instructor::findOrFail($id);
+        $courses = Course::where('instructor_id', $id)
+            ->with(['courseCertificate:id,uuid', 'individualCertificate:id'])
+            ->select('id', 'title', 'type', 'individual_certificate_id', 'course_certificate_id')
+            ->get();
+        $individualCertificates = \App\Models\IndividualCertificate::where('status', 'published')->orderBy('title')->select('id', 'title')->get();
+        $courseCertificates = \App\Models\CourseCertificate::where('status', 'published')->orderBy('title')->select('id', 'title')->get();
+
+        return response()->json([
+            'instructor_name' => $instructor->name,
+            'courses' => $courses,
+            'individual_certificates' => $individualCertificates,
+            'course_certificates' => $courseCertificates,
+        ]);
+    }
+
+    public function linkCertificateToCourse(Request $request, $courseId)
+    {
+        $request->validate([
+            'certificate_type' => 'required|in:individual,course,none',
+            'certificate_id' => 'nullable|integer',
+        ]);
+
+        $course = Course::findOrFail($courseId);
+
+        if ($request->certificate_type === 'individual') {
+            $course->individual_certificate_id = $request->certificate_id;
+            $course->course_certificate_id = null;
+        } elseif ($request->certificate_type === 'course') {
+            $course->course_certificate_id = $request->certificate_id;
+            $course->individual_certificate_id = null;
+        } else {
+            $course->individual_certificate_id = null;
+            $course->course_certificate_id = null;
+        }
+
+        $course->save();
+
+        return response()->json(['success' => true, 'message' => 'Certificado vinculado correctamente.']);
     }
 }

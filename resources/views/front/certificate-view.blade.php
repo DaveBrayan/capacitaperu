@@ -291,7 +291,7 @@
         // DATOS DEL SERVIDOR
         // ====================================================================
         @if(($type ?? 'course') === 'course')
-            const templateData = @json($certificate->course->certificate_template ?? []);
+            const templateData = @json($certificate->course->active_certificate_template ?? []);
             @php
                 $courseMeta = $certificate->course->metadata ?? [];
             @endphp
