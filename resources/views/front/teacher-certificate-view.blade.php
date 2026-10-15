@@ -264,7 +264,9 @@
             verification_url: "{{ route('teacher-certificate.view', ['uuid' => $certificate->uuid]) }}",
             instructor_signature: @json(!empty($certificate->instructor->signature_url) ? asset($certificate->instructor->signature_url) : null),
             executive_signature: @json(!empty($executive_signature ?? null) ? asset($executive_signature) : null),
-            academic_signature: @json(!empty($academic_signature ?? null) ? asset($academic_signature) : null)
+            academic_signature: @json(!empty($academic_signature ?? null) ? asset($academic_signature) : null),
+            executive_seal: @json(!empty($executive_seal ?? null) ? asset($executive_seal) : null),
+            academic_seal: @json(!empty($academic_seal ?? null) ? asset($academic_seal) : null)
         };
 
         // ====================================================================
@@ -370,7 +372,7 @@
                         innerHTML = `<img src="${link}" style="width:${qw}; height:${qh}; max-width:${qw}; max-height:${qh}; object-fit:contain; display:block;">`;
                     }
 
-                    else if (['signature', 'manager_signature', 'executive_signature', 'academic_signature'].includes(el.type)) {
+                    else if (['signature', 'manager_signature'].includes(el.type)) {
                         cStyle += `width:auto; white-space:nowrap; justify-content:flex-end; align-items:center;`;
 
                         let sigUrl = null;
@@ -385,14 +387,6 @@
                             sigUrl = el.content?.signature_img ? fixUrl(el.content.signature_img) : null;
                             sigName = el.content?.name || '';
                             sigRole = el.content?.role || '';
-                        } else if (el.type === 'executive_signature') {
-                            sigUrl = realData.executive_signature;
-                            sigName = el.content?.name || 'DIRECTOR EJECUTIVO';
-                            sigRole = el.content?.role || 'DIRECTOR EJECUTIVO';
-                        } else if (el.type === 'academic_signature') {
-                            sigUrl = realData.academic_signature;
-                            sigName = el.content?.name || 'DIRECTOR ACADÉMICO';
-                            sigRole = el.content?.role || 'DIRECTOR ACADÉMICO';
                         }
 
                         const size = (el.content && el.content.size) ? el.content.size : 100;
@@ -415,9 +409,25 @@
                         `;
                     }
 
-                    else if (el.type === 'image' || el.type === 'seal') {
-                        const src = fixUrl(el.src);
-                        innerHTML = `<img src="${src}" style="width:100%; height:100%; object-fit:contain; display:block;">`;
+                    else if (['image', 'seal', 'executive_seal', 'academic_seal', 'executive_signature', 'academic_signature'].includes(el.type)) {
+                        let sealSrc = el.src;
+                        if (el.type === 'executive_seal') sealSrc = realData.executive_seal || el.src;
+                        if (el.type === 'academic_seal') sealSrc = realData.academic_seal || el.src;
+                        if (el.type === 'executive_signature') sealSrc = realData.executive_signature || el.src;
+                        if (el.type === 'academic_signature') sealSrc = realData.academic_signature || el.src;
+
+                        const defaultW = el.type.includes('signature') ? '180px' : (el.type.includes('seal') ? '130px' : '150px');
+                        const defaultH = el.type.includes('signature') ? '80px' : (el.type.includes('seal') ? '130px' : '150px');
+                        const qw = (el.style?.width && el.style.width !== 'auto') ? el.style.width : defaultW;
+                        const qh = (el.style?.height && el.style.height !== 'auto') ? el.style.height : defaultH;
+                        cStyle += `width:${qw}; height:${qh}; overflow:hidden; display:flex; justify-content:center; align-items:center;`;
+
+                        if (sealSrc) {
+                            const src = fixUrl(sealSrc);
+                            innerHTML = `<img src="${src}" class="cert-fit-img" style="width:100%; height:100%; object-fit:contain; display:block;">`;
+                        } else {
+                            innerHTML = '';
+                        }
                     }
 
                     else if (el.type === 'student_name') {
@@ -683,23 +693,65 @@
                     if (!certEl) continue;
 
                     // --- TWEAK TEMPORAL SOLO PARA EL PDF ---
-                    // Encogemos el QR unos píxeles solo en los laterales justo antes de la foto
-                    const qrs = certEl.querySelectorAll('img[src*="qrserver.com"]');
-                    const oldQrStyles = [];
-                    qrs.forEach((qr, idx) => {
-                        oldQrStyles[idx] = qr.style.cssText;
-                        const w = parseInt(qr.parentElement.style.width) || 120;
-                        const h = parseInt(qr.parentElement.style.height) || 120;
-                        qr.style.width = w + 'px'; 
-                        qr.style.height = h + 'px'; 
-                        qr.style.marginLeft = '0px';
-                        qr.style.marginRight = '0px';
-                        qr.style.marginTop = '0px';
-                        qr.style.marginBottom = '0px';
-                        qr.style.maxWidth = 'none';
-                        qr.style.maxHeight = 'none';
-                        qr.style.objectFit = 'contain';
+                    // Evitar que html2canvas estire imágenes ignorando CSS object-fit: contain
+                    const certImgs = certEl.querySelectorAll('img');
+                    const oldImgStyles = [];
+                    certImgs.forEach((img, idx) => {
+                        const parent = img.parentElement;
+                        oldImgStyles[idx] = {
+                            imgStyle: img.style.cssText,
+                            parentStyle: parent ? parent.style.cssText : null
+                        };
+
+                        // Omitir el fondo general del certificado de página completa
+                        if (img.id === 'cert-background' || parent?.classList?.contains('cert-page')) {
+                            return;
+                        }
+
+                        // Si es el QR de api.qrserver.com
+                        if (img.src && img.src.includes('qrserver.com')) {
+                            const w = parseInt(parent?.style?.width) || 120;
+                            const h = parseInt(parent?.style?.height) || 120;
+                            img.style.width = w + 'px'; 
+                            img.style.height = h + 'px'; 
+                            img.style.marginLeft = '0px';
+                            img.style.marginRight = '0px';
+                            img.style.marginTop = '0px';
+                            img.style.marginBottom = '0px';
+                            img.style.maxWidth = 'none';
+                            img.style.maxHeight = 'none';
+                            img.style.objectFit = 'contain';
+                            return;
+                        }
+
+                        // Para firmas, sellos e imágenes dentro de contenedores dimensionados
+                        if (parent && img.naturalWidth && img.naturalHeight) {
+                            const parentW = parseFloat(parent.style.width) || parent.clientWidth;
+                            const parentH = parseFloat(parent.style.height) || parent.clientHeight;
+
+                            if (parentW > 0 && parentH > 0) {
+                                // Calcular la escala contain exacta según las dimensiones naturales de la imagen
+                                const scale = Math.min(parentW / img.naturalWidth, parentH / img.naturalHeight);
+                                const fitW = Math.round(img.naturalWidth * scale);
+                                const fitH = Math.round(img.naturalHeight * scale);
+
+                                parent.style.display = 'flex';
+                                parent.style.justifyContent = 'center';
+                                parent.style.alignItems = 'center';
+
+                                img.style.width = fitW + 'px';
+                                img.style.height = fitH + 'px';
+                                img.style.maxWidth = 'none';
+                                img.style.maxHeight = 'none';
+                                img.style.objectFit = 'contain';
+                                img.style.margin = 'auto';
+                                img.style.display = 'block';
+                            }
+                        }
                     });
+
+                    // Breve espera para que el DOM aplique las dimensiones calculadas
+                    await new Promise(r => setTimeout(r, 60));
 
                     const canvas = await iframeWin.html2canvas(certEl, {
                         scale: 3,
@@ -717,9 +769,14 @@
                         y: 0 // Always 0 because other pages are hidden and it sits at the top of the body
                     });
 
-                    // Restaurar el QR para que la vista previa siga intacta
-                    qrs.forEach((qr, idx) => {
-                        qr.style.cssText = oldQrStyles[idx];
+                    // Restaurar los estilos originales de las imágenes y contenedores para que la vista previa siga intacta
+                    certImgs.forEach((img, idx) => {
+                        if (oldImgStyles[idx]) {
+                            img.style.cssText = oldImgStyles[idx].imgStyle;
+                            if (img.parentElement && oldImgStyles[idx].parentStyle !== null) {
+                                img.parentElement.style.cssText = oldImgStyles[idx].parentStyle;
+                            }
+                        }
                     });
 
                     const imgData = canvas.toDataURL('image/jpeg', 0.98);

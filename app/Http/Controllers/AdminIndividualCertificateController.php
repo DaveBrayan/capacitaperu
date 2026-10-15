@@ -29,7 +29,11 @@ class AdminIndividualCertificateController extends Controller
         $courses = \App\Models\Course::where('status', 'published')->get();
         $certificate = new IndividualCertificate();
         $linkedCourseId = null;
-        return view('admin.individual-certificates.create', compact('instructors', 'categories', 'courses', 'certificate', 'linkedCourseId'));
+        $executive_signature = \App\Models\Setting::where('key' ,'individual_cert_executive_signature')->value('value');
+        $academic_signature = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
+        $executive_seal = \App\Models\Setting::where('key', 'individual_cert_executive_seal')->value('value');
+        $academic_seal = \App\Models\Setting::where('key', 'individual_cert_academic_seal')->value('value');
+        return view('admin.individual-certificates.create', compact('instructors', 'categories', 'courses', 'certificate', 'linkedCourseId', 'executive_signature', 'academic_signature', 'executive_seal', 'academic_seal'));
     }
 
     public function store(Request $request)
@@ -184,8 +188,10 @@ class AdminIndividualCertificateController extends Controller
 
         $executive_signature = \App\Models\Setting::where('key', 'individual_cert_executive_signature')->value('value');
         $academic_signature = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
+        $executive_seal = \App\Models\Setting::where('key', 'individual_cert_executive_seal')->value('value');
+        $academic_seal = \App\Models\Setting::where('key', 'individual_cert_academic_seal')->value('value');
 
-        return view('admin.individual-certificates.create', compact('certificate', 'instructors', 'categories', 'courses', 'linkedCourseId', 'executive_signature', 'academic_signature'));
+        return view('admin.individual-certificates.create', compact('certificate', 'instructors', 'categories', 'courses', 'linkedCourseId', 'executive_signature', 'academic_signature', 'executive_seal', 'academic_seal'));
     }
 
     public function update(Request $request, $id)
@@ -346,10 +352,14 @@ class AdminIndividualCertificateController extends Controller
     {
         $executive = \App\Models\Setting::where('key', 'individual_cert_executive_signature')->value('value');
         $academic = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
+        $executive_seal = \App\Models\Setting::where('key', 'individual_cert_executive_seal')->value('value');
+        $academic_seal = \App\Models\Setting::where('key', 'individual_cert_academic_seal')->value('value');
 
         return response()->json([
             'executive' => $executive ? asset($executive) : null,
             'academic' => $academic ? asset($academic) : null,
+            'executive_seal' => $executive_seal ? asset($executive_seal) : null,
+            'academic_seal' => $academic_seal ? asset($academic_seal) : null,
         ]);
     }
 
@@ -358,6 +368,8 @@ class AdminIndividualCertificateController extends Controller
         $request->validate([
             'executive_signature' => 'nullable|image|max:2048',
             'academic_signature' => 'nullable|image|max:2048',
+            'executive_seal' => 'nullable|image|max:2048',
+            'academic_seal' => 'nullable|image|max:2048',
         ]);
 
         if ($request->hasFile('executive_signature')) {
@@ -372,6 +384,22 @@ class AdminIndividualCertificateController extends Controller
             $path = $request->file('academic_signature')->store('signatures', 'public');
             \App\Models\Setting::updateOrCreate(
                 ['key' => 'individual_cert_academic_signature'],
+                ['value' => 'storage/' . $path]
+            );
+        }
+
+        if ($request->hasFile('executive_seal')) {
+            $path = $request->file('executive_seal')->store('signatures', 'public');
+            \App\Models\Setting::updateOrCreate(
+                ['key' => 'individual_cert_executive_seal'],
+                ['value' => 'storage/' . $path]
+            );
+        }
+
+        if ($request->hasFile('academic_seal')) {
+            $path = $request->file('academic_seal')->store('signatures', 'public');
+            \App\Models\Setting::updateOrCreate(
+                ['key' => 'individual_cert_academic_seal'],
                 ['value' => 'storage/' . $path]
             );
         }
@@ -441,12 +469,16 @@ class AdminIndividualCertificateController extends Controller
 
         $executive_signature = \App\Models\Setting::where('key', 'individual_cert_executive_signature')->value('value');
         $academic_signature = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
+        $executive_seal = \App\Models\Setting::where('key', 'individual_cert_executive_seal')->value('value');
+        $academic_seal = \App\Models\Setting::where('key', 'individual_cert_academic_seal')->value('value');
             
         return view('front.certificate-view', [
             'certificate' => $certificate,
             'type' => 'individual_preview', // Tipo especial para preview de certificado base
             'executive_signature' => $executive_signature,
-            'academic_signature' => $academic_signature
+            'academic_signature' => $academic_signature,
+            'executive_seal' => $executive_seal,
+            'academic_seal' => $academic_seal
         ]);
     }
 }

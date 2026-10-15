@@ -57,7 +57,12 @@ class AdminCourseCertificateController extends Controller
             }
         }
         
-        return view('admin.course-certificates.create', compact('courses', 'instructors', 'certificate'));
+        $executive_signature = \App\Models\Setting::where('key', 'individual_cert_executive_signature')->value('value');
+        $academic_signature = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
+        $executive_seal = \App\Models\Setting::where('key', 'individual_cert_executive_seal')->value('value');
+        $academic_seal = \App\Models\Setting::where('key', 'individual_cert_academic_seal')->value('value');
+        
+        return view('admin.course-certificates.create', compact('courses', 'instructors', 'certificate', 'executive_signature', 'academic_signature', 'executive_seal', 'academic_seal'));
     }
 
     public function store(Request $request)
@@ -118,8 +123,10 @@ class AdminCourseCertificateController extends Controller
 
         $executive_signature = \App\Models\Setting::where('key', 'individual_cert_executive_signature')->value('value');
         $academic_signature = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
+        $executive_seal = \App\Models\Setting::where('key', 'individual_cert_executive_seal')->value('value');
+        $academic_seal = \App\Models\Setting::where('key', 'individual_cert_academic_seal')->value('value');
 
-        return view('admin.course-certificates.create', compact('certificate', 'courses', 'instructors', 'executive_signature', 'academic_signature'));
+        return view('admin.course-certificates.create', compact('certificate', 'courses', 'instructors', 'executive_signature', 'academic_signature', 'executive_seal', 'academic_seal'));
     }
 
     public function update(Request $request, $id)
@@ -220,7 +227,9 @@ class AdminCourseCertificateController extends Controller
 
         $executive_signature = \App\Models\Setting::where('key', 'individual_cert_executive_signature')->value('value');
         $academic_signature  = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
+        $executive_seal      = \App\Models\Setting::where('key', 'individual_cert_executive_seal')->value('value');
+        $academic_seal       = \App\Models\Setting::where('key', 'individual_cert_academic_seal')->value('value');
 
-        return view('front.teacher-certificate-view', compact('certificate', 'executive_signature', 'academic_signature'));
+        return view('front.teacher-certificate-view', compact('certificate', 'executive_signature', 'academic_signature', 'executive_seal', 'academic_seal'));
     }
 }

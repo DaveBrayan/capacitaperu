@@ -19,7 +19,7 @@
     </div>
 
     <!-- FORMULARIO -->
-    <form id="certForm" action="{{ $certificate->exists ? route('admin.course-certificates.update', $certificate->id) : route('admin.course-certificates.store') }}" method="POST" enctype="multipart/form-data" class="relative pb-32 max-w-6xl mx-auto">
+    <form id="certForm" action="{{ $certificate->exists ? route('admin.course-certificates.update', $certificate->id) : route('admin.course-certificates.store') }}" method="POST" enctype="multipart/form-data" class="relative pb-32 max-w-[1600px] w-full mx-auto px-2 sm:px-4 md:px-6">
         @csrf
         @if($certificate->exists) @method('PUT') @endif
         
@@ -39,21 +39,21 @@
         
         <input type="hidden" name="active_tab" id="active_tab" value="info">
         
-        <!-- NAVEGACIÓN (TABS) -->
-        <div class="bg-white rounded-[1.5rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 mb-8 overflow-hidden">
-            <div class="flex p-1 md:p-2">
+        <!-- NAVEGACIÓN (TABS COMPACTOS) -->
+        <div class="bg-white rounded-2xl md:rounded-full shadow-sm border border-gray-100 mb-6 max-w-2xl mx-auto overflow-hidden">
+            <div class="flex p-1 md:p-1.5 gap-1">
                 <button type="button" onclick="showTab('info')" id="tab-btn-info" 
-                        class="flex-1 py-3 px-1 md:py-5 md:px-8 text-center rounded-[1rem] md:rounded-[2rem] transition-all duration-500 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 group">
-                    <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg md:rounded-xl bg-gray-50 text-gray-400 group-hover:bg-[#FF7A00] group-hover:text-white flex items-center justify-center shrink-0 transition-all font-black text-[9px] md:text-[10px]">01</div>
-                    <span class="font-black text-[8px] md:text-[10px] uppercase tracking-wider md:tracking-widest text-gray-400 group-hover:text-[#001144]">
+                        class="flex-1 py-2 px-2 md:py-2.5 md:px-5 text-center rounded-xl md:rounded-full transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer">
+                    <div class="w-6 h-6 rounded-full bg-gray-50 text-gray-400 group-hover:bg-[#FF7A00] group-hover:text-white flex items-center justify-center shrink-0 transition-all font-black text-[10px]">01</div>
+                    <span class="font-black text-[9px] md:text-[11px] uppercase tracking-wider text-gray-400 group-hover:text-[#001144] truncate">
                         Vinculación del Certificado
                     </span>
                 </button>
                 
                 <button type="button" onclick="showTab('certificate')" id="tab-btn-certificate" 
-                        class="flex-1 py-3 px-1 md:py-5 md:px-8 text-center rounded-[1rem] md:rounded-[2rem] transition-all duration-500 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-3 group">
-                    <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg md:rounded-xl bg-gray-50 text-gray-400 group-hover:bg-[#FF7A00] group-hover:text-white flex items-center justify-center shrink-0 transition-all font-black text-[9px] md:text-[10px]">02</div>
-                    <span class="font-black text-[8px] md:text-[10px] uppercase tracking-wider md:tracking-widest text-gray-400 group-hover:text-[#001144]">
+                        class="flex-1 py-2 px-2 md:py-2.5 md:px-5 text-center rounded-xl md:rounded-full transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer">
+                    <div class="w-6 h-6 rounded-full bg-gray-50 text-gray-400 group-hover:bg-[#FF7A00] group-hover:text-white flex items-center justify-center shrink-0 transition-all font-black text-[10px]">02</div>
+                    <span class="font-black text-[9px] md:text-[11px] uppercase tracking-wider text-gray-400 group-hover:text-[#001144] truncate">
                         Diseño del Diploma
                     </span>
                 </button>
@@ -61,7 +61,7 @@
         </div>
 
         <!-- CONTENIDO -->
-        <div class="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-10 min-h-[600px]">
+        <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 md:p-8 min-h-[600px]">
             <div id="tab-info" class="tab-content">
                 @include('admin.course-certificates.partials.info')
             </div>
@@ -115,19 +115,33 @@
             document.getElementById('tab-' + tabId).classList.remove('hidden');
             
             document.querySelectorAll('[id^="tab-btn-"]').forEach(btn => {
-                btn.classList.remove('bg-[#001144]', 'text-white');
-                btn.querySelector('div').classList.add('bg-gray-50', 'text-gray-400');
-                btn.querySelector('div').classList.remove('bg-[#FF7A00]', 'text-white');
-                btn.querySelector('span').classList.add('text-gray-400');
-                btn.querySelector('span').classList.remove('text-white');
+                btn.classList.remove('bg-[#001144]', 'text-white', 'shadow-sm');
+                const numDiv = btn.querySelector('div');
+                if (numDiv) {
+                    numDiv.classList.add('bg-gray-50', 'text-gray-400');
+                    numDiv.classList.remove('bg-[#FF7A00]', 'text-white');
+                }
+                const labelSpan = btn.querySelector('span');
+                if (labelSpan) {
+                    labelSpan.classList.add('text-gray-400');
+                    labelSpan.classList.remove('text-white');
+                }
             });
 
             const activeBtn = document.getElementById('tab-btn-' + tabId);
-            activeBtn.classList.add('bg-[#001144]');
-            activeBtn.querySelector('div').classList.remove('bg-gray-50', 'text-gray-400');
-            activeBtn.querySelector('div').classList.add('bg-[#FF7A00]', 'text-white');
-            activeBtn.querySelector('span').classList.remove('text-gray-400');
-            activeBtn.querySelector('span').classList.add('text-white');
+            if (activeBtn) {
+                activeBtn.classList.add('bg-[#001144]', 'shadow-sm');
+                const activeNum = activeBtn.querySelector('div');
+                if (activeNum) {
+                    activeNum.classList.remove('bg-gray-50', 'text-gray-400');
+                    activeNum.classList.add('bg-[#FF7A00]', 'text-white');
+                }
+                const activeSpan = activeBtn.querySelector('span');
+                if (activeSpan) {
+                    activeSpan.classList.remove('text-gray-400');
+                    activeSpan.classList.add('text-white');
+                }
+            }
 
             document.getElementById('active_tab').value = tabId;
             window.location.hash = tabId;

@@ -67,15 +67,19 @@ class PublicCertificateController extends Controller
             ->with(['certificate.instructor', 'certificate.category'])
             ->firstOrFail();
 
-        // Traemos las firmas globales
+        // Traemos las firmas y sellos globales
         $executive_signature = \App\Models\Setting::where('key', 'individual_cert_executive_signature')->value('value');
         $academic_signature = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
+        $executive_seal = \App\Models\Setting::where('key', 'individual_cert_executive_seal')->value('value');
+        $academic_seal = \App\Models\Setting::where('key', 'individual_cert_academic_seal')->value('value');
 
         return view('front.certificate-view', [
             'certificate' => $certificate,
             'type' => 'individual',
             'executive_signature' => $executive_signature,
-            'academic_signature' => $academic_signature
+            'academic_signature' => $academic_signature,
+            'executive_seal' => $executive_seal,
+            'academic_seal' => $academic_seal
         ]);
     }
 }

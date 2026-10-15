@@ -14,20 +14,23 @@ class AdminMediaController extends Controller
      */
     public function list()
     {
-        // Obtener todos los archivos del disco 'public' en la carpeta 'media'
-        $files = Storage::disk('public')->files('media');
+        $disk = Storage::disk('public');
+        $files = $disk->files('media');
         
-        // Filtrar y mapear a URLs completas
         $assets = collect($files)
             ->filter(function ($file) {
                 // Solo imágenes
                 return preg_match('/\.(jpg|jpeg|png|gif|webp|svg)$/i', $file);
             })
-            ->map(function ($file) {
-                // Generar URL pública directa (ej: /storage/media/archivo.jpg)
-                return asset('storage/' . $file);
+            ->map(function ($file) use ($disk) {
+                return [
+                    'url' => asset('storage/' . $file),
+                    'name' => basename($file),
+                    'size' => $disk->exists($file) ? $disk->size($file) : 0,
+                    'last_modified' => $disk->exists($file) ? $disk->lastModified($file) : 0,
+                ];
             })
-            ->values(); // Reindexar array
+            ->values();
 
         return response()->json($assets);
     }
@@ -44,15 +47,100 @@ class AdminMediaController extends Controller
         if ($request->file('file')->isValid()) {
             // Guardar en storage/app/public/media
             $path = $request->file('file')->store('media', 'public');
+            $disk = Storage::disk('public');
             
-            // Devolver la URL pública absoluta
+            // Devolver metadatos completos y la URL pública absoluta
             return response()->json([
                 'url' => asset('storage/' . $path),
+                'name' => basename($path),
+                'size' => $disk->exists($path) ? $disk->size($path) : 0,
+                'last_modified' => $disk->exists($path) ? $disk->lastModified($path) : time(),
                 'success' => true
             ]);
         }
 
         return response()->json(['error' => 'Archivo no válido'], 400);
+    }
+
+    /**
+     * Renombra una imagen en el disco y actualiza referencias en BD si aplica.
+     */
+    public function rename(Request $request)
+    {
+        $request->validate([
+            'url' => 'required|string',
+            'new_name' => 'required|string|max:150',
+        ]);
+
+        $url = $request->input('url');
+        $rawNewName = trim($request->input('new_name'));
+
+        // Convertir URL a path relativo
+        $oldPath = str_replace(asset('storage/'), '', $url);
+        $oldPath = ltrim($oldPath, '/');
+
+        if (!Storage::disk('public')->exists($oldPath)) {
+            return response()->json(['error' => 'El archivo no fue encontrado en el servidor.'], 404);
+        }
+
+        $extension = pathinfo($oldPath, PATHINFO_EXTENSION);
+        $baseName = pathinfo($rawNewName, PATHINFO_FILENAME);
+        $slugName = Str::slug($baseName, '_');
+        if (empty($slugName)) {
+            $slugName = 'imagen_' . time();
+        }
+
+        $newFileName = $slugName . '.' . strtolower($extension);
+        $newPath = 'media/' . $newFileName;
+
+        // Evitar sobreescritura si ya existe otro archivo con ese nombre
+        $counter = 1;
+        while (Storage::disk('public')->exists($newPath) && $newPath !== $oldPath) {
+            $newFileName = $slugName . '_' . $counter . '.' . strtolower($extension);
+            $newPath = 'media/' . $newFileName;
+            $counter++;
+        }
+
+        if ($newPath !== $oldPath) {
+            Storage::disk('public')->move($oldPath, $newPath);
+
+            // Actualizar referencias si está en plantillas de certificados
+            $oldRef = $oldPath;
+            $newRef = $newPath;
+
+            \App\Models\Course::where('certificate_template', 'like', '%' . $oldRef . '%')
+                ->each(function ($course) use ($oldRef, $newRef) {
+                    $json = json_encode($course->certificate_template);
+                    $json = str_replace($oldRef, $newRef, $json);
+                    $course->certificate_template = json_decode($json, true);
+                    $course->save();
+                });
+
+            \App\Models\IndividualCertificate::where('certificate_template', 'like', '%' . $oldRef . '%')
+                ->each(function ($cert) use ($oldRef, $newRef) {
+                    $json = json_encode($cert->certificate_template);
+                    $json = str_replace($oldRef, $newRef, $json);
+                    $cert->certificate_template = json_decode($json, true);
+                    $cert->save();
+                });
+
+            \App\Models\CourseCertificate::where('certificate_template', 'like', '%' . $oldRef . '%')
+                ->each(function ($cert) use ($oldRef, $newRef) {
+                    $json = json_encode($cert->certificate_template);
+                    $json = str_replace($oldRef, $newRef, $json);
+                    $cert->certificate_template = json_decode($json, true);
+                    $cert->save();
+                });
+        }
+
+        $disk = Storage::disk('public');
+        return response()->json([
+            'success' => true,
+            'url' => asset('storage/' . $newPath),
+            'name' => $newFileName,
+            'size' => $disk->exists($newPath) ? $disk->size($newPath) : 0,
+            'last_modified' => $disk->exists($newPath) ? $disk->lastModified($newPath) : time(),
+        ]);
     }
 
     /**
@@ -76,8 +164,9 @@ class AdminMediaController extends Controller
         // Verificar si la imagen está en uso en las plantillas guardadas en la BD
         $inCourse = \App\Models\Course::where('certificate_template', 'like', '%' . $path . '%')->exists();
         $inIndividual = \App\Models\IndividualCertificate::where('certificate_template', 'like', '%' . $path . '%')->exists();
+        $inCourseCert = \App\Models\CourseCertificate::where('certificate_template', 'like', '%' . $path . '%')->exists();
 
-        if ($inCourse || $inIndividual) {
+        if ($inCourse || $inIndividual || $inCourseCert) {
             return response()->json([
                 'success' => false,
                 'used' => true,

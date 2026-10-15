@@ -112,6 +112,10 @@
                         <i class="ph-fill ph-certificate text-xl"></i>
                         <span class="font-bold text-sm">Individual</span>
                     </a>
+                    <a href="{{ route('admin.certificate-templates.index') }}" class="group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 {{ request()->routeIs('admin.certificate-templates.*') ? 'sidebar-item-active' : 'hover:bg-white/5 text-white/60 hover:text-white' }}">
+                        <i class="ph-fill ph-layout text-xl"></i>
+                        <span class="font-bold text-sm">Plantillas</span>
+                    </a>
                 @endif
 
                 @if(Auth::user()->hasPermission('promotions.view'))

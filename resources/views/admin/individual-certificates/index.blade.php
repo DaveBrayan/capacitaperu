@@ -232,49 +232,94 @@
         </div>
     </div>
 
-    <!-- MODAL DE FIRMAS -->
+    <!-- MODAL DE FIRMAS Y SELLOS -->
     <div id="signaturesModal" class="fixed inset-0 z-[9999]" style="display:none;">
         <div class="absolute inset-0 bg-[#001144]/40 backdrop-blur-sm transition-opacity" onclick="closeSignaturesModal()"></div>
-        <div class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-out" id="signaturesModalPanel">
+        <div class="absolute right-0 top-0 bottom-0 w-full max-w-xl bg-white shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-out" id="signaturesModalPanel">
             <!-- Header -->
-            <div class="p-8 border-b border-gray-100 flex items-center justify-between">
+            <div class="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between">
                 <div>
-                    <h3 class="text-xl font-black text-[#001144]">Configurar Firmas</h3>
-                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Firmas Globales para Certificados</p>
+                    <h3 class="text-xl font-black text-[#001144]">Configurar Firmas y Sellos</h3>
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-0.5">Gerente General & Coordinadora Académica</p>
                 </div>
                 <button onclick="closeSignaturesModal()" class="w-10 h-10 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-gray-100 transition-all">
-                    <i class="ph-bold ph-x"></i>
+                    <i class="ph-bold ph-x text-lg"></i>
                 </button>
             </div>
 
             <!-- Body -->
-            <div class="flex-1 overflow-y-auto p-8 no-scrollbar">
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 no-scrollbar">
                 <form id="signaturesForm" class="space-y-8">
                     @csrf
-                    <!-- Firma Director Ejecutivo -->
-                    <div class="space-y-4">
-                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Director Ejecutivo</label>
-                        <div class="relative group">
-                            <div id="executivePreview" class="w-full h-32 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden mb-2">
-                                <p class="text-[10px] font-black text-gray-300 uppercase">Sin firma cargada</p>
+                    
+                    <!-- BLOQUE 1: GERENTE GENERAL -->
+                    <div class="p-5 rounded-2xl bg-gray-50/70 border border-gray-100 space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-gray-200/60">
+                            <div class="w-7 h-7 rounded-lg bg-[#FF7A00]/10 text-[#FF7A00] flex items-center justify-center font-black">
+                                <i class="ph-bold ph-briefcase"></i>
                             </div>
-                            <input type="file" name="executive_signature" accept="image/*" class="absolute inset-0 w-full h-32 opacity-0 cursor-pointer z-10" onchange="previewSignature(this, 'executivePreview')">
-                            <div class="text-center">
-                                <span class="text-[10px] font-bold text-[#FF7A00] uppercase tracking-wider">Click para cambiar</span>
+                            <h4 class="text-xs font-black text-[#001144] uppercase tracking-wider">Gerente General</h4>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Firma Gerente General -->
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Firma en PDF / PNG</label>
+                                <div class="relative group">
+                                    <div id="executivePreview" class="w-full h-28 rounded-xl bg-white border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden p-2 group-hover:border-[#FF7A00] transition-colors">
+                                        <p class="text-[9px] font-black text-gray-300 uppercase">Sin firma</p>
+                                    </div>
+                                    <input type="file" name="executive_signature" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewSignature(this, 'executivePreview')">
+                                </div>
+                                <span class="text-[9px] font-bold text-[#FF7A00] uppercase tracking-wider block text-center">Cambiar Firma</span>
+                            </div>
+
+                            <!-- Sello Gerente General -->
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Sello Institucional</label>
+                                <div class="relative group">
+                                    <div id="executiveSealPreview" class="w-full h-28 rounded-xl bg-white border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden p-2 group-hover:border-[#FF7A00] transition-colors">
+                                        <p class="text-[9px] font-black text-gray-300 uppercase">Sin sello</p>
+                                    </div>
+                                    <input type="file" name="executive_seal" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewSignature(this, 'executiveSealPreview')">
+                                </div>
+                                <span class="text-[9px] font-bold text-[#FF7A00] uppercase tracking-wider block text-center">Cambiar Sello</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Firma Director Académico -->
-                    <div class="space-y-4">
-                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Director Académico</label>
-                        <div class="relative group">
-                            <div id="academicPreview" class="w-full h-32 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden mb-2">
-                                <p class="text-[10px] font-black text-gray-300 uppercase">Sin firma cargada</p>
+                    <!-- BLOQUE 2: COORDINADORA ACADÉMICA -->
+                    <div class="p-5 rounded-2xl bg-gray-50/70 border border-gray-100 space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-gray-200/60">
+                            <div class="w-7 h-7 rounded-lg bg-[#001144]/10 text-[#001144] flex items-center justify-center font-black">
+                                <i class="ph-bold ph-graduation-cap"></i>
                             </div>
-                            <input type="file" name="academic_signature" accept="image/*" class="absolute inset-0 w-full h-32 opacity-0 cursor-pointer z-10" onchange="previewSignature(this, 'academicPreview')">
-                            <div class="text-center">
-                                <span class="text-[10px] font-bold text-[#FF7A00] uppercase tracking-wider">Click para cambiar</span>
+                            <h4 class="text-xs font-black text-[#001144] uppercase tracking-wider">Coordinadora Académica</h4>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Firma Coordinadora Académica -->
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Firma en PDF / PNG</label>
+                                <div class="relative group">
+                                    <div id="academicPreview" class="w-full h-28 rounded-xl bg-white border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden p-2 group-hover:border-[#FF7A00] transition-colors">
+                                        <p class="text-[9px] font-black text-gray-300 uppercase">Sin firma</p>
+                                    </div>
+                                    <input type="file" name="academic_signature" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewSignature(this, 'academicPreview')">
+                                </div>
+                                <span class="text-[9px] font-bold text-[#FF7A00] uppercase tracking-wider block text-center">Cambiar Firma</span>
+                            </div>
+
+                            <!-- Sello Coordinadora Académica -->
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Sello Institucional</label>
+                                <div class="relative group">
+                                    <div id="academicSealPreview" class="w-full h-28 rounded-xl bg-white border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden p-2 group-hover:border-[#FF7A00] transition-colors">
+                                        <p class="text-[9px] font-black text-gray-300 uppercase">Sin sello</p>
+                                    </div>
+                                    <input type="file" name="academic_seal" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewSignature(this, 'academicSealPreview')">
+                                </div>
+                                <span class="text-[9px] font-bold text-[#FF7A00] uppercase tracking-wider block text-center">Cambiar Sello</span>
                             </div>
                         </div>
                     </div>
@@ -418,15 +463,32 @@
                 panel.classList.remove('translate-x-full');
             }, 10);
 
-            // Cargar firmas actuales
+            // Cargar firmas y sellos actuales
             fetch("{{ route('admin.individual-certificates.get-signatures') }}")
                 .then(res => res.json())
                 .then(data => {
                     if(data.executive) {
                         document.getElementById('executivePreview').innerHTML = `<img src="${data.executive}" class="h-full object-contain">`;
+                    } else {
+                        document.getElementById('executivePreview').innerHTML = `<p class="text-[9px] font-black text-gray-300 uppercase">Sin firma</p>`;
                     }
+
                     if(data.academic) {
                         document.getElementById('academicPreview').innerHTML = `<img src="${data.academic}" class="h-full object-contain">`;
+                    } else {
+                        document.getElementById('academicPreview').innerHTML = `<p class="text-[9px] font-black text-gray-300 uppercase">Sin firma</p>`;
+                    }
+
+                    if(data.executive_seal) {
+                        document.getElementById('executiveSealPreview').innerHTML = `<img src="${data.executive_seal}" class="h-full object-contain">`;
+                    } else {
+                        document.getElementById('executiveSealPreview').innerHTML = `<p class="text-[9px] font-black text-gray-300 uppercase">Sin sello</p>`;
+                    }
+
+                    if(data.academic_seal) {
+                        document.getElementById('academicSealPreview').innerHTML = `<img src="${data.academic_seal}" class="h-full object-contain">`;
+                    } else {
+                        document.getElementById('academicSealPreview').innerHTML = `<p class="text-[9px] font-black text-gray-300 uppercase">Sin sello</p>`;
                     }
                 });
         }

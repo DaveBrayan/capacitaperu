@@ -129,15 +129,17 @@
             signature: @json($course->instructor->signature_url ? asset($course->instructor->signature_url) : null)
         },
         executive: {
-            name: "Director Ejecutivo",
-            role: "DIRECTOR EJECUTIVO",
-            signature: "{{ $executive_signature ? asset($executive_signature) : null }}"
+            name: "Gerente General",
+            role: "GERENTE GENERAL",
+            signature: "{{ !empty($executive_signature) ? asset($executive_signature) : null }}"
         },
         academic: {
-            name: "Director Académico",
-            role: "DIRECTOR ACADÉMICO",
-            signature: "{{ $academic_signature ? asset($academic_signature) : null }}"
+            name: "Coordinadora Académica",
+            role: "COORDINADORA ACADÉMICA",
+            signature: "{{ !empty($academic_signature) ? asset($academic_signature) : null }}"
         },
+        executiveSeal: "{{ !empty($executive_seal) ? asset($executive_seal) : null }}",
+        academicSeal: "{{ !empty($academic_seal) ? asset($academic_seal) : null }}",
         studentExample: "JUAN PÉREZ DE LA CRUZ",
         startDate: @json($fmtDate($courseMeta['start_date'] ?? null) ?? '01 de enero del 2025'),
         endDate: @json($fmtDate($courseMeta['end_date'] ?? null) ?? '31 de enero del 2025'),
@@ -148,6 +150,7 @@
     const mediaRoutes = {
         list: "{{ route('admin.media.list') }}",
         upload: "{{ route('admin.media.upload') }}",
+        rename: "{{ route('admin.media.rename') }}",
         delete: "{{ route('admin.media.delete') }}"
     };
 
@@ -205,6 +208,15 @@
 
         <!-- PANEL ADD -->
         <div id="panel-add" class="flex-1 overflow-y-auto p-3 space-y-2">
+            <!-- BOTÓN IMPORTAR DE PLANTILLA -->
+            <div class="mb-3">
+                <button type="button" onclick="openImportTemplateModal()" 
+                        class="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl shadow-md flex items-center justify-center gap-2 font-black text-xs transition-all transform hover:-translate-y-0.5 border border-emerald-500/30">
+                    <i class="ph-bold ph-file-arrow-down text-base"></i>
+                    <span>Importar de Plantilla</span>
+                </button>
+            </div>
+
             <!-- Selector de páginas -->
             <div class="mb-4">
                 <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Configuración</label>
@@ -248,16 +260,40 @@
                 </button>
             </div>
 
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-4 mb-2">Firmas</p>
-            <button type="button" onclick="addElement('signature')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3 hover:border-purple-400 transition-all text-left">
-                <i class="ph-bold ph-pen-nib text-lg text-purple-400"></i><span class="text-xs font-bold text-gray-600">Instructor</span>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-4 mb-2">Firmas Institucionales</p>
+            <button type="button" onclick="addElement('signature')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3 hover:border-[#FF7A00] transition-all text-left group">
+                <i class="ph-bold ph-pen-nib text-lg text-gray-400 group-hover:text-[#FF7A00]"></i>
+                <div class="flex-1 truncate">
+                    <span class="text-xs font-bold text-gray-700 block truncate">Instructor</span>
+                    <span class="text-[9px] text-gray-400 block">Capacitador del curso</span>
+                </div>
             </button>
-            <button type="button" onclick="addElement('executive_signature')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3 hover:border-purple-400 transition-all text-left">
-                <i class="ph-bold ph-briefcase text-lg text-purple-400"></i><span class="text-xs font-bold text-gray-600">Dir. Ejecutivo</span>
+            <button type="button" onclick="addElement('executive_signature')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3 hover:border-[#FF7A00] transition-all text-left group">
+                <i class="ph-bold ph-briefcase text-lg text-gray-400 group-hover:text-[#FF7A00]"></i>
+                <div class="flex-1 truncate">
+                    <span class="text-xs font-bold text-gray-700 block truncate">Gerente General</span>
+                    <span class="text-[9px] text-gray-400 block">Firma configurada</span>
+                </div>
             </button>
-            <button type="button" onclick="addElement('academic_signature')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3 hover:border-purple-400 transition-all text-left">
-                <i class="ph-bold ph-graduation-cap text-lg text-purple-400"></i><span class="text-xs font-bold text-gray-600">Dir. Académico</span>
+            <button type="button" onclick="addElement('academic_signature')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3 hover:border-[#FF7A00] transition-all text-left group">
+                <i class="ph-bold ph-graduation-cap text-lg text-gray-400 group-hover:text-[#FF7A00]"></i>
+                <div class="flex-1 truncate">
+                    <span class="text-xs font-bold text-gray-700 block truncate">Coordinadora Académica</span>
+                    <span class="text-[9px] text-gray-400 block">Firma configurada</span>
+                </div>
             </button>
+
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-4 mb-2">Sellos Institucionales</p>
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="addElement('executive_seal')" class="p-2.5 bg-gray-50 border border-gray-200 rounded-lg flex flex-col items-center gap-1 hover:border-[#FF7A00] transition-all text-center group">
+                    <i class="ph-bold ph-seal-check text-xl text-gray-400 group-hover:text-[#FF7A00]"></i>
+                    <span class="text-[10px] font-bold text-gray-700 leading-tight">Sello Gerente General</span>
+                </button>
+                <button type="button" onclick="addElement('academic_seal')" class="p-2.5 bg-gray-50 border border-gray-200 rounded-lg flex flex-col items-center gap-1 hover:border-[#FF7A00] transition-all text-center group">
+                    <i class="ph-bold ph-seal-check text-xl text-gray-400 group-hover:text-[#FF7A00]"></i>
+                    <span class="text-[10px] font-bold text-gray-700 leading-tight">Sello Coord. Académica</span>
+                </button>
+            </div>
 
             <div class="mt-6 pt-4 border-t border-gray-200 space-y-3">
                 <button type="button" onclick="openMediaManager('background')" class="w-full py-2.5 bg-[#E0F9F6] border border-[#0AD1C8] text-[#0B6477] rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#0AD1C8] hover:text-white transition-all">
@@ -383,25 +419,10 @@
 </div>
 
 <!-- MEDIA MODAL -->
-<div id="media-modal" class="fixed inset-0 z-[100] hidden">
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closeMediaManager()"></div>
-    <div class="fixed inset-0 z-10 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl h-[600px] flex flex-col overflow-hidden">
-            <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
-                <h3 class="font-bold">Biblioteca de Medios</h3>
-                <button type="button" onclick="closeMediaManager()"><i class="ph-bold ph-x"></i></button>
-            </div>
-            <div class="p-4 border-b flex justify-between bg-white">
-                <label class="px-4 py-2 bg-[#213A57] text-white rounded-lg text-sm font-bold cursor-pointer">
-                    Subir Imagen
-                    <input type="file" class="hidden" accept="image/*" onchange="uploadMediaFile(this)">
-                </label>
-                <button type="button" onclick="loadMediaLibrary()"><i class="ph-bold ph-arrow-clockwise"></i></button>
-            </div>
-            <div id="media-grid" class="flex-1 overflow-y-auto p-4 grid grid-cols-5 gap-4 bg-gray-50"></div>
-        </div>
-    </div>
-</div>
+@include('admin.partials.certificate-media-modal')
+
+<!-- IMPORT TEMPLATE MODAL -->
+@include('admin.partials.import-certificate-template-modal')
 
 <script>
     let certState = { pages: 1, background: null, elements: [], background2: null, elements2: [] };
@@ -524,18 +545,31 @@
         if (type === 'qr') {
             newEl.style = { width: '120px', height: '120px' };
         }
-        if (['signature', 'executive_signature', 'academic_signature'].includes(type)) {
+        if (type === 'executive_signature') {
+            newEl.src = window.courseMeta.executive?.signature || null;
+            newEl.style = { width: '180px', height: '80px' };
+        }
+        if (type === 'academic_signature') {
+            newEl.src = window.courseMeta.academic?.signature || null;
+            newEl.style = { width: '180px', height: '80px' };
+        }
+        if (type === 'signature') {
             newEl.style.width = '200px';
-            let meta = type === 'executive_signature' ? window.courseMeta.executive
-                     : type === 'academic_signature' ? window.courseMeta.academic
-                     : window.courseMeta.instructor;
             newEl.content = {
-                name: meta.name,
-                role: meta.role,
+                name: window.courseMeta.instructor.name,
+                role: window.courseMeta.instructor.role,
                 size: 80,
                 nameStyle: { fontSize: '14px', color: '#000000', fontWeight: 'bold' },
                 roleStyle: { fontSize: '10px', color: '#666666' }
             };
+        }
+        if (type === 'executive_seal') {
+            newEl.src = window.courseMeta.executiveSeal || null;
+            newEl.style = { width: '130px', height: '130px' };
+        }
+        if (type === 'academic_seal') {
+            newEl.src = window.courseMeta.academicSeal || null;
+            newEl.style = { width: '130px', height: '130px' };
         }
         if (type === 'image' || type === 'seal') {
             newEl.src = src;
@@ -593,10 +627,19 @@
                 document.getElementById('group-content').classList.remove('hidden');
                 quillEditor.root.innerHTML = el.content || '';
             }
-        } else if (['qr', 'seal', 'image'].includes(el.type)) {
+        } else if (['qr', 'seal', 'image', 'executive_seal', 'academic_seal', 'executive_signature', 'academic_signature'].includes(el.type)) {
             document.getElementById('group-image').classList.remove('hidden');
-            setValue('prop-img-w', parseInt(el.style.width));
-            setValue('prop-img-h', parseInt(el.style.height));
+            setValue('prop-img-w', parseInt(el.style.width) || 180);
+            setValue('prop-img-h', parseInt(el.style.height) || 80);
+
+            const btnChangeImg = document.getElementById('btn-change-img');
+            if (btnChangeImg) {
+                if (['executive_signature', 'academic_signature', 'executive_seal', 'academic_seal'].includes(el.type)) {
+                    btnChangeImg.classList.add('hidden');
+                } else {
+                    btnChangeImg.classList.remove('hidden');
+                }
+            }
         }
     }
 
@@ -764,12 +807,25 @@
 
             if (el.type === 'qr') {
                 div.innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PREVIEW">';
-            } else if (['signature', 'executive_signature', 'academic_signature'].includes(el.type)) {
-                let sigUrl = el.type === 'signature' ? window.courseMeta.instructor.signature
-                           : el.type === 'executive_signature' ? window.courseMeta.executive.signature
-                           : window.courseMeta.academic.signature;
+            } else if (['executive_signature', 'academic_signature', 'image', 'seal', 'executive_seal', 'academic_seal'].includes(el.type)) {
+                let imgUrl = el.src;
+                if (el.type === 'executive_signature') imgUrl = window.courseMeta.executive?.signature || el.src;
+                if (el.type === 'academic_signature') imgUrl = window.courseMeta.academic?.signature || el.src;
+                if (el.type === 'executive_seal') imgUrl = window.courseMeta.executiveSeal || el.src;
+                if (el.type === 'academic_seal') imgUrl = window.courseMeta.academicSeal || el.src;
 
-                const size = el.content.size || 80;
+                if (!el.style.width) el.style.width = '180px';
+                if (!el.style.height) el.style.height = (el.type.includes('seal') ? '130px' : '80px');
+
+                if (imgUrl) {
+                    div.innerHTML = `<img src="${fixUrl(imgUrl)}" style="width:100%; height:100%; object-fit:contain; display:block; pointer-events:none;">`;
+                } else {
+                    const label = (el.type === 'executive_signature' || el.type === 'academic_signature') ? 'Sin firma cargada' : 'Sin sello cargado';
+                    div.innerHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af; font-size:10px; border:1px dashed #d1d5db; border-radius:6px; text-align:center; padding:4px;">${label}</div>`;
+                }
+            } else if (el.type === 'signature') {
+                let sigUrl = window.courseMeta.instructor.signature;
+                const size = el.content?.size || 80;
                 const imgHtml = (sigUrl && sigUrl !== 'null')
                     ? `<img src="${sigUrl}" style="height:${size}px; object-fit:contain;">`
                     : `<div style="height:${size}px; width:100px; border:1px dashed #ccc; display:flex; align-items:center; justify-content:center; font-size:10px; color:#aaa;">Firma</div>`;
@@ -777,23 +833,32 @@
                 div.innerHTML = `
                     ${imgHtml}
                     <div style="border-top:1px solid ${el.style.color || '#000'}; width:100%; text-align:center; padding-top:4px;">
-                        <div style="font-size:14px; font-weight:bold;">${el.content.name}</div>
-                        <div style="font-size:10px;">${el.content.role}</div>
+                        <div style="font-size:14px; font-weight:bold;">${el.content?.name || 'Instructor'}</div>
+                        <div style="font-size:10px;">${el.content?.role || 'Capacitador'}</div>
                     </div>
                 `;
-            } else if (['image', 'seal'].includes(el.type)) {
-                div.innerHTML = `<img src="${fixUrl(el.src)}">`;
             } else {
                 div.innerHTML = el.content || 'Texto';
             }
 
             if (selectedElementId === el.id) {
-                ['nw', 'ne', 'sw', 'se'].forEach(h => {
+                const handles = ['nw', 'ne', 'sw', 'se'];
+                handles.forEach(h => {
                     const handle = document.createElement('div');
                     handle.className = `resize-handle handle-${h}`;
                     handle.onmousedown = (e) => { e.stopPropagation(); startResize(e, h, el.id); };
                     div.appendChild(handle);
                 });
+
+                if (['qr', 'seal', 'image', 'executive_seal', 'academic_seal', 'executive_signature', 'academic_signature'].includes(el.type)) {
+                    const curW = parseInt(el.style.width) || div.offsetWidth || 100;
+                    const curH = parseInt(el.style.height) || div.offsetHeight || 100;
+                    const badge = document.createElement('div');
+                    badge.id = 'size-badge-' + el.id;
+                    badge.className = 'absolute -bottom-7 left-1/2 -translate-x-1/2 bg-[#001144] text-white text-[9px] font-bold px-2 py-0.5 rounded shadow pointer-events-none whitespace-nowrap z-[120]';
+                    badge.innerText = `${curW} × ${curH} px`;
+                    div.appendChild(badge);
+                }
             }
 
             layer.appendChild(div);
@@ -840,10 +905,23 @@
             if (newW < 20) newW = 20; if (newH < 20) newH = 20;
             if (resizeData.el.type === 'qr') { const s = Math.max(newW, newH); newW = s; newH = s; }
 
-            resizeData.el.style.width = newW + 'px';
-            resizeData.el.style.height = newH + 'px';
+            const intW = Math.round(newW);
+            const intH = Math.round(newH);
+
+            resizeData.el.style.width = intW + 'px';
+            resizeData.el.style.height = intH + 'px';
             const div = document.getElementById(resizeData.el.id);
-            div.style.width = newW + 'px'; div.style.height = newH + 'px';
+            if (div) {
+                div.style.width = intW + 'px'; 
+                div.style.height = intH + 'px';
+                const badge = document.getElementById('size-badge-' + resizeData.el.id);
+                if (badge) badge.innerText = `${intW} × ${intH} px`;
+            }
+
+            const wInput = document.getElementById('prop-img-w');
+            const hInput = document.getElementById('prop-img-h');
+            if (wInput) wInput.value = intW;
+            if (hInput) hInput.value = intH;
             return;
         }
         if (!isDragging) return;
@@ -901,150 +979,7 @@
         return url.includes('storage') ? url : '/storage/' + url;
     }
 
-    function openMediaManager(ctx) {
-        mediaContext = ctx;
-        document.getElementById('media-modal').classList.remove('hidden');
-        loadMediaLibrary();
-    }
-
-    function closeMediaManager() { document.getElementById('media-modal').classList.add('hidden'); }
-
-    function loadMediaLibrary() {
-        const grid = document.getElementById('media-grid');
-        grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-400">Cargando...</div>';
-
-        fetch(mediaRoutes.list).then(r => r.json()).then(files => {
-            grid.innerHTML = '';
-            files.forEach(f => {
-                const url = typeof f === 'string' ? f : (f.url || '');
-                const div = document.createElement('div');
-                div.className = 'aspect-square bg-white rounded-xl overflow-hidden border border-gray-200 cursor-pointer hover:border-blue-500 transition-all p-2 relative';
-                div.onclick = () => selectMediaItem(url);
-                div.innerHTML = `
-                    <img src="${url}" class="w-full h-full object-contain">
-                    <button type="button" class="absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow z-10 transition-all" onclick="confirmDeleteMedia(event, '${url}')" title="Eliminar Imagen">
-                        <i class="ph-bold ph-trash text-xs"></i>
-                    </button>
-                `;
-                grid.appendChild(div);
-            });
-        });
-    }
-
-    function confirmDeleteMedia(e, url) {
-        if(e) {
-            e.stopPropagation();
-            e.preventDefault();
-        }
-        
-        // 1. Verificar si la imagen se está usando en el diseño actual en el editor
-        let isUsed = false;
-        if (certState.background === url || certState.background2 === url) {
-            isUsed = true;
-        }
-        if (!isUsed && certState.elements) {
-            isUsed = certState.elements.some(el => el.src === url);
-        }
-        if (!isUsed && certState.elements2) {
-            isUsed = certState.elements2.some(el => el.src === url);
-        }
-
-        if (isUsed) {
-            Swal.fire({
-                icon: 'error',
-                title: 'No se puede eliminar',
-                text: 'Esta imagen no se puede eliminar porque se está usando en el diseño actual del certificado.',
-                confirmButtonColor: '#213A57'
-            });
-            return;
-        }
-
-        // 2. Si no se usa en el diseño actual, preguntar al usuario
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¿Deseas eliminar esta imagen de la biblioteca de medios?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const formData = new FormData();
-                formData.append('url', url);
-                formData.append('_token', '{{ csrf_token() }}');
-
-                fetch(mediaRoutes.delete, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Eliminado',
-                            text: 'La imagen ha sido eliminada con éxito.',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                        loadMediaLibrary();
-                    } else {
-                        if (data.used) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'No se puede eliminar',
-                                text: 'Esta imagen no se puede eliminar porque se está usando en una plantilla de certificado guardada en el sistema.',
-                                confirmButtonColor: '#213A57'
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: data.error || 'No se pudo eliminar la imagen.',
-                                confirmButtonColor: '#213A57'
-                            });
-                        }
-                    }
-                })
-                .catch(err => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error de conexión',
-                        text: 'No se pudo conectar con el servidor.',
-                        confirmButtonColor: '#213A57'
-                    });
-                });
-            }
-        });
-    }
-
-    function uploadMediaFile(input) {
-        if(!input.files || !input.files[0]) return;
-        const formData = new FormData();
-        formData.append('file', input.files[0]);
-        formData.append('_token', '{{ csrf_token() }}');
-
-        fetch(mediaRoutes.upload, { method: 'POST', body: formData })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success || data.url) loadMediaLibrary();
-            else alert('Error al subir imagen');
-        })
-        .catch(() => alert('Error de conexión'));
-    }
-
-    function selectMediaItem(url) {
-        if (mediaContext === 'background') {
-            if (activePage === 1) certState.background = url;
-            else certState.background2 = url;
-        } else {
-            addElement('image', url);
-        }
-        renderCanvas();
-        closeMediaManager();
-    }
+    // Lógica de Media Manager modularizada en admin.partials.certificate-media-modal
 
     window.updateCertificateInput = function() {
         const input = document.getElementById('certificate_data_input');

@@ -173,7 +173,9 @@ class AdminCourseController extends Controller
         $course->type = $type;
         $executive_signature = \App\Models\Setting::where('key', 'individual_cert_executive_signature')->value('value');
         $academic_signature  = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
-        return view('admin.courses.create', compact('instructors', 'course', 'categories', 'executive_signature', 'academic_signature', 'type', 'viewType', 'routeNamePrefix'));
+        $executive_seal      = \App\Models\Setting::where('key', 'individual_cert_executive_seal')->value('value');
+        $academic_seal       = \App\Models\Setting::where('key', 'individual_cert_academic_seal')->value('value');
+        return view('admin.courses.create', compact('instructors', 'course', 'categories', 'executive_signature', 'academic_signature', 'executive_seal', 'academic_seal', 'type', 'viewType', 'routeNamePrefix'));
     }
 
     public function store(Request $request)
@@ -463,7 +465,9 @@ class AdminCourseController extends Controller
             ->get();
         $executive_signature = \App\Models\Setting::where('key', 'individual_cert_executive_signature')->value('value');
         $academic_signature  = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
-        return view('admin.courses.create', compact('course', 'instructors', 'categories', 'executive_signature', 'academic_signature', 'type', 'viewType', 'routeNamePrefix'));
+        $executive_seal      = \App\Models\Setting::where('key', 'individual_cert_executive_seal')->value('value');
+        $academic_seal       = \App\Models\Setting::where('key', 'individual_cert_academic_seal')->value('value');
+        return view('admin.courses.create', compact('course', 'instructors', 'categories', 'executive_signature', 'academic_signature', 'executive_seal', 'academic_seal', 'type', 'viewType', 'routeNamePrefix'));
     }
 
     public function destroy($id)

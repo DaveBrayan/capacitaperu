@@ -78,8 +78,10 @@ Route::get('/validar/certificado/{uuid}', function ($uuid) {
 
     $executive_signature = \App\Models\Setting::where('key', 'individual_cert_executive_signature')->value('value');
     $academic_signature  = \App\Models\Setting::where('key', 'individual_cert_academic_signature')->value('value');
+    $executive_seal      = \App\Models\Setting::where('key', 'individual_cert_executive_seal')->value('value');
+    $academic_seal       = \App\Models\Setting::where('key', 'individual_cert_academic_seal')->value('value');
 
-    return view('front.certificate-view', compact('certificate', 'executive_signature', 'academic_signature'));
+    return view('front.certificate-view', compact('certificate', 'executive_signature', 'academic_signature', 'executive_seal', 'academic_seal'));
 })->name('certificate.verify');
 
 // --- CERTIFICADOS INDIVIDUALES (BÚSQUEDA Y VISTA) ---
@@ -210,6 +212,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:web', 'setup.check'])-
     Route::resource('categorias', AdminCategoryController::class)->names('categories');
     Route::resource('certificados-individuales', \App\Http\Controllers\AdminIndividualCertificateController::class)->names('individual-certificates');
     Route::resource('certificados-cursos', \App\Http\Controllers\AdminCourseCertificateController::class)->names('course-certificates');
+    Route::resource('plantillas-certificados', \App\Http\Controllers\AdminCertificateTemplateController::class)->names('certificate-templates');
+    Route::post('plantillas-certificados/{id}/duplicar', [\App\Http\Controllers\AdminCertificateTemplateController::class, 'duplicate'])->name('certificate-templates.duplicate');
+    Route::get('plantillas-certificados-api/list', [\App\Http\Controllers\AdminCertificateTemplateController::class, 'getTemplatesJson'])->name('certificate-templates.api.list');
     Route::get('individual-certificates/global/firmas', [\App\Http\Controllers\AdminIndividualCertificateController::class, 'getSignatures'])->name('individual-certificates.get-signatures');
     Route::post('individual-certificates/global/firmas', [\App\Http\Controllers\AdminIndividualCertificateController::class, 'updateSignatures'])->name('individual-certificates.update-signatures');
     
@@ -241,6 +246,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:web', 'setup.check'])-
     Route::get('/media/list', [AdminMediaController::class, 'list'])->name('media.list');
     Route::get('/media/ver/{filename}', [AdminMediaController::class, 'show'])->name('media.view');
     Route::post('/media/upload', [AdminMediaController::class, 'upload'])->name('media.upload');
+    Route::post('/media/rename', [AdminMediaController::class, 'rename'])->name('media.rename');
     Route::post('/media/delete', [AdminMediaController::class, 'delete'])->name('media.delete');
     
     // Inscripciones
