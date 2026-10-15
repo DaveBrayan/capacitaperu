@@ -13,13 +13,44 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminIndividualCertificateController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $certificates = IndividualCertificate::with(['instructor', 'category'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-            
-        return view('admin.individual-certificates.index', compact('certificates'));
+        $query = IndividualCertificate::with(['instructor', 'category', 'user']);
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('registration_number', 'like', "%{$search}%")
+                  ->orWhere('hours', 'like', "%{$search}%")
+                  ->orWhereHas('instructor', function ($iq) use ($search) {
+                      $iq->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('category', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('category') && $request->category !== 'all' && $request->category !== 'Categorías') {
+            $query->where('category_id', $request->category);
+        }
+
+        if ($request->filled('status') && $request->status !== 'all' && $request->status !== 'Estado') {
+            $query->where('status', $request->status);
+        }
+
+        $certificates = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $categories = Category::where('status', true)->orderBy('name')->get();
+
+        if ($request->ajax()) {
+            return view('admin.individual-certificates.partials.table', compact('certificates'))->render();
+        }
+
+        return view('admin.individual-certificates.index', compact('certificates', 'categories'));
     }
 
     public function create()

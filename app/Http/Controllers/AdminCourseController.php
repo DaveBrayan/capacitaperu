@@ -20,20 +20,61 @@ class AdminCourseController extends Controller
     {
         $type = request()->routeIs('admin.diplomas.*') ? 'diploma' : 'course';
 
-        // Cargamos la relación 'enrollments' para contar estudiantes
-        $courses = Course::with(['instructor', 'categories'])
+        // Query base con relaciones (incluye 'user' para saber quién creó el curso)
+        $query = Course::with(['instructor', 'categories', 'user'])
                         ->where('type', $type)
-                        ->withCount('enrollments') // Cuenta automática de inscritos
-                        ->withCount(['projectSubmissions as pending_projects_count' => function ($query) {
-                            $query->where('status', 'pending');
-                        }])
-                        ->orderBy('created_at', 'desc')
-                        ->paginate(10);
+                        ->withCount('enrollments')
+                        ->withCount(['projectSubmissions as pending_projects_count' => function ($q) {
+                            $q->where('status', 'pending');
+                        }]);
+
+        // Filtro de búsqueda (título, descripción, instructor, categoría o creador)
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('short_description', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('instructor', function ($iq) use ($search) {
+                      $iq->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('categories', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filtro por categoría
+        if ($request->filled('category') && $request->category !== 'all' && $request->category !== 'Categorías') {
+            $catId = $request->category;
+            $query->whereHas('categories', function ($cq) use ($catId) {
+                $cq->where('categories.id', $catId);
+            });
+        }
+
+        // Filtro por estado (published / draft)
+        if ($request->filled('status') && $request->status !== 'all' && $request->status !== 'Estado') {
+            $query->where('status', $request->status);
+        }
+
+        $courses = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
                         
         $viewType = $type == 'diploma' ? 'Diplomado' : 'Curso';
         $routeNamePrefix = $type == 'diploma' ? 'admin.diplomas.' : 'admin.courses.';
 
-        return view('admin.courses.index', compact('courses', 'type', 'viewType', 'routeNamePrefix'));
+        $categories = Category::where('status', true)
+            ->whereIn('target_type', [$type, 'both'])
+            ->orderBy('name')
+            ->get();
+
+        if ($request->ajax()) {
+            return view('admin.courses.partials.table', compact('courses', 'type', 'viewType', 'routeNamePrefix'))->render();
+        }
+
+        return view('admin.courses.index', compact('courses', 'categories', 'type', 'viewType', 'routeNamePrefix'));
     }
 
     // --- NUEVO: MÉTODO PARA VER DETALLES (AJAX/MODAL) ---

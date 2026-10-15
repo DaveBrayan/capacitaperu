@@ -16,10 +16,34 @@
     <div class="flex flex-col md:flex-row justify-between items-center gap-6 mb-10 fade-in-up" style="animation-delay: 0.1s">
         
         <!-- Buscador y Filtros -->
-        <div class="flex flex-wrap gap-4 w-full md:w-auto">
+        <div class="flex flex-wrap gap-4 w-full md:w-auto items-center">
             <div class="relative w-full md:w-96">
                 <i class="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="text" placeholder="Buscar certificados..." class="w-full pl-12 pr-4 py-3.5 rounded-[1.2rem] border border-gray-100 focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/5 outline-none transition-all text-sm font-medium bg-white shadow-sm">
+                <input type="text" 
+                       id="cert-search-input" 
+                       value="{{ request('search') }}"
+                       placeholder="Buscar por título, registro, instructor, staff..." 
+                       autocomplete="off"
+                       class="w-full pl-12 pr-10 py-3.5 rounded-[1.2rem] border border-gray-100 focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/5 outline-none transition-all text-sm font-medium bg-white shadow-sm">
+                <button type="button" id="cert-clear-btn" class="{{ request('search') ? '' : 'hidden' }} absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="ph-bold ph-x-circle text-lg"></i>
+                </button>
+            </div>
+
+            <div class="flex gap-2 flex-wrap">
+                <select id="cert-category-filter" class="px-5 py-3.5 rounded-[1.2rem] border border-gray-100 bg-white text-[#001144] text-xs font-black uppercase tracking-wider focus:border-[#FF7A00] outline-none cursor-pointer shadow-sm hover:bg-gray-50 transition-colors">
+                    <option value="all">Todas las Categorías</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+                <select id="cert-status-filter" class="px-5 py-3.5 rounded-[1.2rem] border border-gray-100 bg-white text-[#001144] text-xs font-black uppercase tracking-wider focus:border-[#FF7A00] outline-none cursor-pointer shadow-sm hover:bg-gray-50 transition-colors">
+                    <option value="all">Todos los Estados</option>
+                    <option value="published" {{ request('status') === 'published' ? 'selected' : '' }}>Publicado</option>
+                    <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Borrador</option>
+                </select>
             </div>
         </div>
 
@@ -39,137 +63,8 @@
     </div>
 
     <!-- TABLA DE CERTIFICADOS -->
-    <div class="bg-white rounded-[2.5rem] shadow-xl shadow-gray-100/50 border border-gray-50 overflow-hidden fade-in-up" style="animation-delay: 0.2s">
-        <div class="overflow-x-auto no-scrollbar">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-50/30 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] border-b border-gray-50">
-                        <th class="px-8 py-5 w-16 text-center">ID</th>
-                        <th class="px-8 py-5">Información</th>
-                        <th class="px-8 py-5">Categoría / Estado</th>
-                        <th class="px-8 py-5 text-center">Carga Horaria</th>
-                        <th class="px-8 py-5">Fechas</th>
-                        <th class="px-8 py-5 text-right">Gestión</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm divide-y divide-gray-50">
-                    
-                    @forelse($certificates as $cert)
-                    <tr class="hover:bg-gray-50/50 transition-all duration-300 group"
-                        data-title="{{ $cert->title }}"
-                        data-hours="{{ $cert->hours ?? 0 }}"
-                        data-reg="{{ $cert->registration_number ?? 'S/N' }}"
-                        data-status-text="{{ $cert->status === 'published' ? 'Publicado' : 'Borrador' }}"
-                        data-status-class="{{ $cert->status === 'published' ? 'text-green-600' : 'text-orange-500' }}">
-                        <!-- NUMERACIÓN -->
-                        <td class="px-8 py-6 text-center font-black text-gray-300">
-                            {{ $loop->iteration + ($certificates->currentPage() - 1) * $certificates->perPage() }}
-                        </td>
-
-                        <!-- INFORMACIÓN -->
-                        <td class="px-8 py-6">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-xl bg-blue-50 text-[#001144] flex items-center justify-center shrink-0 border border-white shadow-sm ring-2 ring-gray-50">
-                                    <i class="ph-fill ph-certificate text-2xl"></i>
-                                </div>
-                                <div class="max-w-[300px]">
-                                    <p class="font-black text-[#001144] text-base leading-tight mb-1 group-hover:text-[#FF7A00] transition-colors line-clamp-1" title="{{ $cert->title }}">{{ $cert->title }}</p>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-[10px] text-gray-400 font-black uppercase tracking-wider">Reg: {{ $cert->registration_number ?? 'S/N' }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-
-
-                        <!-- CATEGORÍA / ESTADO -->
-                        <td class="px-8 py-6">
-                            <div class="flex flex-col gap-2">
-                                <div class="flex flex-wrap gap-1">
-                                    @if($cert->category)
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-[#001144] border border-blue-100">
-                                            <i class="ph-fill {{ $cert->category->icon ?? 'ph-tag' }}"></i> {{ $cert->category->name }}
-                                        </span>
-                                    @else
-                                        <span class="text-[10px] text-gray-300 font-bold uppercase">General</span>
-                                    @endif
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-2 h-2 rounded-full {{ $cert->status === 'published' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.4)]' }}"></div>
-                                    <span class="text-[10px] font-black uppercase tracking-widest {{ $cert->status === 'published' ? 'text-green-600' : 'text-orange-500' }}">
-                                        {{ $cert->status === 'published' ? 'Publicado' : 'Borrador' }}
-                                    </span>
-                                </div>
-                            </div>
-                        </td>
-
-                        <!-- CARGA HORARIA -->
-                        <td class="px-8 py-6 text-center">
-                            <div class="inline-flex flex-col items-center">
-                                <span class="font-black text-[#001144] text-xl tracking-tighter">{{ $cert->hours ?? 0 }}</span>
-                                <span class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Horas</span>
-                            </div>
-                        </td>
-
-                        <!-- FECHAS -->
-                        <td class="px-8 py-6">
-                            <div class="flex flex-col text-[10px] font-black uppercase tracking-wider text-gray-500">
-                                <span>I: {{ $cert->start_date ? $cert->start_date->format('d/m/Y') : '-' }}</span>
-                                <span>F: {{ $cert->end_date ? $cert->end_date->format('d/m/Y') : '-' }}</span>
-                            </div>
-                        </td>
-
-                        <!-- ACCIONES -->
-                        <td class="px-8 py-6 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                @if(Auth::user()->hasPermission('individual-certificates.view'))
-                                <button onclick="openDetailsModal({{ $cert->id }}, this)" class="w-10 h-10 rounded-[0.8rem] flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all duration-300" title="Ver Detalles">
-                                    <i class="ph-bold ph-magnifying-glass text-xl"></i>
-                                </button>
-                                @endif
-
-                                @if(Auth::user()->hasPermission('individual-certificates.edit'))
-                                <a href="{{ route('admin.individual-certificates.edit', $cert->id) }}" class="w-10 h-10 rounded-[0.8rem] flex items-center justify-center text-gray-400 hover:text-[#FF7A00] hover:bg-orange-50 transition-all duration-300" title="Editar">
-                                    <i class="ph-bold ph-pencil-simple text-xl"></i>
-                                </a>
-                                @endif
-                                
-                                @if(Auth::user()->hasPermission('individual-certificates.delete'))
-                                <form action="{{ route('admin.individual-certificates.destroy', $cert->id) }}" method="POST" onsubmit="return confirm('¿Seguro que desea eliminar este certificado?');" class="inline">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="w-10 h-10 rounded-[0.8rem] flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-300" title="Eliminar">
-                                        <i class="ph-bold ph-trash text-xl"></i>
-                                    </button>
-                                </form>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="px-8 py-20 text-center">
-                            <div class="flex flex-col items-center justify-center">
-                                <div class="w-24 h-24 bg-gray-50 rounded-[2rem] flex items-center justify-center mb-6 ring-8 ring-gray-50/50">
-                                    <i class="ph-duotone ph-certificate text-5xl text-gray-200"></i>
-                                </div>
-                                <h3 class="text-xl font-black text-gray-600 mb-2">No se encontraron certificados</h3>
-                                <p class="text-sm text-gray-400 font-medium mb-8 max-w-sm">Aún no hay certificados individuales registrados.</p>
-                                <a href="{{ route('admin.individual-certificates.create') }}" class="px-8 py-3.5 bg-[#FF7A00] text-white rounded-[1.2rem] font-black text-sm hover:bg-[#e66e00] transition-all shadow-xl shadow-[#FF7A00]/20">
-                                    Crear mi primer certificado
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- PAGINACIÓN -->
-        <div class="px-8 py-6 bg-gray-50/30 border-t border-gray-50">
-            {{ $certificates->links() }}
-        </div>
+    <div id="certificates-table-container" class="bg-white rounded-[2.5rem] shadow-xl shadow-gray-100/50 border border-gray-50 overflow-hidden fade-in-up transition-opacity duration-200" style="animation-delay: 0.2s">
+        @include('admin.individual-certificates.partials.table')
     </div>
 
     <!-- MODAL DE DETALLES (se teletransporta a body via JS) -->
@@ -543,6 +438,100 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i class="ph-bold ph-floppy-disk"></i> Guardar Configuración';
             }
+        }
+
+        // ==========================================
+        // FILTRADO Y BÚSQUEDA AJAX EN TIEMPO REAL (CERTIFICADOS)
+        // ==========================================
+        let certSearchTimer = null;
+        const certSearchInput = document.getElementById('cert-search-input');
+        const certCategoryFilter = document.getElementById('cert-category-filter');
+        const certStatusFilter = document.getElementById('cert-status-filter');
+        const certClearBtn = document.getElementById('cert-clear-btn');
+        const certTableContainer = document.getElementById('certificates-table-container');
+
+        function fetchCertificates(url = null) {
+            const searchVal = certSearchInput ? certSearchInput.value.trim() : '';
+            const categoryVal = certCategoryFilter ? certCategoryFilter.value : 'all';
+            const statusVal = certStatusFilter ? certStatusFilter.value : 'all';
+
+            if (certClearBtn) {
+                certClearBtn.classList.toggle('hidden', searchVal.length === 0);
+            }
+
+            let targetUrl = url;
+            if (!targetUrl) {
+                const params = new URLSearchParams();
+                if (searchVal) params.set('search', searchVal);
+                if (categoryVal && categoryVal !== 'all') params.set('category', categoryVal);
+                if (statusVal && statusVal !== 'all') params.set('status', statusVal);
+                
+                const qs = params.toString();
+                targetUrl = window.location.pathname + (qs ? '?' + qs : '');
+            }
+
+            window.history.replaceState({}, '', targetUrl);
+
+            if (certTableContainer) {
+                certTableContainer.style.opacity = '0.5';
+            }
+
+            fetch(targetUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Error al filtrar');
+                return res.text();
+            })
+            .then(html => {
+                if (certTableContainer) {
+                    certTableContainer.innerHTML = html;
+                    certTableContainer.style.opacity = '1';
+                }
+            })
+            .catch(err => {
+                console.error('Error al cargar certificados:', err);
+                if (certTableContainer) {
+                    certTableContainer.style.opacity = '1';
+                }
+            });
+        }
+
+        if (certSearchInput) {
+            certSearchInput.addEventListener('input', function() {
+                clearTimeout(certSearchTimer);
+                certSearchTimer = setTimeout(() => {
+                    fetchCertificates();
+                }, 250);
+            });
+        }
+
+        if (certClearBtn) {
+            certClearBtn.addEventListener('click', function() {
+                certSearchInput.value = '';
+                fetchCertificates();
+                certSearchInput.focus();
+            });
+        }
+
+        if (certCategoryFilter) {
+            certCategoryFilter.addEventListener('change', () => fetchCertificates());
+        }
+
+        if (certStatusFilter) {
+            certStatusFilter.addEventListener('change', () => fetchCertificates());
+        }
+
+        if (certTableContainer) {
+            certTableContainer.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (link && link.href && (link.closest('.pagination') || link.classList.contains('page-link') || link.href.includes('page='))) {
+                    e.preventDefault();
+                    fetchCertificates(link.href);
+                }
+            });
         }
     </script>
 </x-layouts.admin>
