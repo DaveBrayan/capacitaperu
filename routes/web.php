@@ -122,6 +122,52 @@ Route::get('/storage/{path}', function ($path) {
     ]);
 })->where('path', '.*')->name('storage.fallback');
 
+// Ruta de Utilidad para Servidor sin Terminal (Storage Link + Optimize Clear)
+Route::get('/artisan-fix', function () {
+    $results = [];
+
+    // 1. Limpiar caché y optimizaciones
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    $results[] = "<h3>1. Caché y Optimización</h3><pre>" . \Illuminate\Support\Facades\Artisan::output() . "</pre>";
+
+    // 2. Gestionar enlace de storage
+    $target = storage_path('app/public');
+    $link = public_path('storage');
+
+    if (!file_exists($target)) {
+        @mkdir($target, 0755, true);
+    }
+
+    // Eliminar si existe enlace roto o archivo
+    if (is_link($link)) {
+        @unlink($link);
+    } elseif (is_dir($link) && count(scandir($link)) <= 2) {
+        @rmdir($link);
+    }
+
+    $symlinkSuccess = false;
+    try {
+        if (@symlink($target, $link)) {
+            $symlinkSuccess = true;
+            $results[] = "<h3>2. Enlace Simbólico (symlink)</h3><p style='color:green;'>Creado con éxito: <code>$link &rarr; $target</code></p>";
+        }
+    } catch (\Throwable $e) {
+        // Fallback
+    }
+
+    if (!$symlinkSuccess) {
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        $results[] = "<h3>2. Artisan storage:link</h3><pre>" . \Illuminate\Support\Facades\Artisan::output() . "</pre>";
+    }
+
+    // 3. Comprobar qué archivos existen en storage/app/public
+    $files = @scandir($target);
+    $fileList = $files ? implode(', ', array_diff($files, ['.', '..'])) : 'Carpeta vacía o sin permisos';
+    $results[] = "<h3>3. Contenido encontrado en storage/app/public</h3><p>[" . e($fileList) . "]</p>";
+
+    return "<div style='font-family:sans-serif; max-width:700px; margin:40px auto; padding:24px; border:1px solid #ddd; border-radius:12px; background:#fafafa;'>" . implode('<hr>', $results) . "</div>";
+});
+
 
 
 /*
