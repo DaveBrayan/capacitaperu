@@ -197,7 +197,50 @@ Route::get('/artisan-fix', function () {
         // 3. Comprobar qué archivos existen en storage/app/public
         $scan = @scandir($target);
         $fileList = is_array($scan) ? implode(', ', array_diff($scan, ['.', '..'])) : 'Carpeta vacía o sin permisos';
-        $results[] = "<h3>3. Contenido en storage/app/public</h3><p>[" . e($fileList) . "]</p>";
+        
+        $courseFiles = @scandir($target . '/courses');
+        $courseCount = is_array($courseFiles) ? count(array_diff($courseFiles, ['.', '..'])) : 0;
+        $results[] = "<h3>3. Contenido en storage/app/public</h3><p>Carpetas: [" . e($fileList) . "]</p><p>Total imágenes en cursos: <b>$courseCount</b></p>";
+
+        // 4. Sincronización Directa (Para hostings con exec y symlink bloqueados)
+        $syncResults = [];
+        $syncFunction = function ($src, $dst) use (&$syncFunction) {
+            if (!is_dir($dst)) {
+                @mkdir($dst, 0755, true);
+            }
+            $dir = @opendir($src);
+            $copied = 0;
+            if ($dir) {
+                while (false !== ($file = readdir($dir))) {
+                    if ($file !== '.' && $file !== '..') {
+                        $srcFile = $src . '/' . $file;
+                        $dstFile = $dst . '/' . $file;
+                        if (is_dir($srcFile)) {
+                            $copied += $syncFunction($srcFile, $dstFile);
+                        } else {
+                            if (!file_exists($dstFile) || filemtime($srcFile) > filemtime($dstFile)) {
+                                if (@copy($srcFile, $dstFile)) {
+                                    $copied++;
+                                }
+                            }
+                        }
+                    }
+                }
+                closedir($dir);
+            }
+            return $copied;
+        };
+
+        foreach ($candidateLinks as $link) {
+            $parentDir = dirname($link);
+            if (file_exists($parentDir) && is_dir($parentDir) && !is_link($link)) {
+                $copiedCount = $syncFunction($target, $link);
+                $syncResults[] = "Sincronizados <b>$copiedCount</b> archivos en: <code>$link</code>";
+            }
+        }
+
+        $results[] = "<h3>4. Sincronización Automática de Archivos</h3>" . 
+            (count($syncResults) ? implode('<br>', $syncResults) : 'No se pudo sincronizar o ya estaban sincronizados.');
 
         return "<div style='font-family:sans-serif; max-width:750px; margin:40px auto; padding:24px; border:1px solid #ddd; border-radius:12px; background:#fafafa;'>" . implode('<hr>', $results) . "</div>";
 
