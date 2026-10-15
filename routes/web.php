@@ -413,6 +413,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:web', 'setup.check'])-
         Route::put('/{id}/reset-pin', 'resetPin')->name('reset_pin');
     });
 
+    // Centro de Descargas
+    Route::get('/centro-descargas', [App\Http\Controllers\AdminDownloadCenterController::class, 'index'])->name('downloads.index');
+    Route::get('/centro-descargas/buscar', [App\Http\Controllers\AdminDownloadCenterController::class, 'searchStudentCertificates'])->name('downloads.search');
+    Route::post('/centro-descargas/log', [App\Http\Controllers\AdminDownloadCenterController::class, 'logDownload'])->name('downloads.log');
+
     // Gestión de Copias de Seguridad (Backup)
     Route::get('/backups', [App\Http\Controllers\AdminBackupController::class, 'index'])->name('backups.index');
     Route::post('/backups/generar', [App\Http\Controllers\AdminBackupController::class, 'generate'])->name('backups.generate');

@@ -150,8 +150,14 @@
                     </a>
                 @endif
 
-                @if(Auth::user()->hasPermission('backups.view') || Auth::user()->hasPermission('landing.edit') || Auth::user()->hasPermission('settings.view'))
+                @if(Auth::user()->hasPermission('downloads.view') || Auth::user()->hasPermission('backups.view') || Auth::user()->hasPermission('landing.edit') || Auth::user()->hasPermission('settings.view'))
                     <p class="px-4 text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-3 mt-8">Sistema</p>
+                    @if(Auth::user()->hasPermission('downloads.view') || Auth::user()->hasPermission('backups.view') || Auth::user()->hasPermission('settings.view'))
+                        <a href="{{ route('admin.downloads.index') }}" class="group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 {{ request()->routeIs('admin.downloads.*') ? 'sidebar-item-active' : 'hover:bg-white/5 text-white/60 hover:text-white' }}">
+                            <i class="ph-fill ph-download-simple text-xl"></i>
+                            <span class="font-bold text-sm">Centro de Descargas</span>
+                        </a>
+                    @endif
                     @if(Auth::user()->hasPermission('backups.view'))
                         <a href="{{ route('admin.backups.index') }}" class="group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 {{ request()->routeIs('admin.backups.*') ? 'sidebar-item-active' : 'hover:bg-white/5 text-white/60 hover:text-white' }}">
                             <i class="ph-fill ph-database text-xl"></i>
