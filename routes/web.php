@@ -124,48 +124,91 @@ Route::get('/storage/{path}', function ($path) {
 
 // Ruta de Utilidad para Servidor sin Terminal (Storage Link + Optimize Clear)
 Route::get('/artisan-fix', function () {
-    $results = [];
-
-    // 1. Limpiar caché y optimizaciones
-    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-    $results[] = "<h3>1. Caché y Optimización</h3><pre>" . \Illuminate\Support\Facades\Artisan::output() . "</pre>";
-
-    // 2. Gestionar enlace de storage
-    $target = storage_path('app/public');
-    $link = public_path('storage');
-
-    if (!file_exists($target)) {
-        @mkdir($target, 0755, true);
-    }
-
-    // Eliminar si existe enlace roto o archivo
-    if (is_link($link)) {
-        @unlink($link);
-    } elseif (is_dir($link) && count(scandir($link)) <= 2) {
-        @rmdir($link);
-    }
-
-    $symlinkSuccess = false;
     try {
-        if (@symlink($target, $link)) {
-            $symlinkSuccess = true;
-            $results[] = "<h3>2. Enlace Simbólico (symlink)</h3><p style='color:green;'>Creado con éxito: <code>$link &rarr; $target</code></p>";
+        $results = [];
+
+        // 1. Limpiar caché y optimizaciones
+        try {
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            $results[] = "<h3>1. Caché y Optimización</h3><pre>" . e(\Illuminate\Support\Facades\Artisan::output()) . "</pre>";
+        } catch (\Throwable $e) {
+            $results[] = "<h3>1. Caché y Optimización</h3><p style='color:orange;'>Aviso: " . e($e->getMessage()) . "</p>";
         }
-    } catch (\Throwable $e) {
-        // Fallback
+
+        // 2. Origen del storage
+        $target = storage_path('app/public');
+        if (!file_exists($target)) {
+            @mkdir($target, 0755, true);
+        }
+
+        // Detectar posibles carpetas públicas (cPanel public_html o public)
+        $basePath = base_path();
+        $candidateLinks = array_unique([
+            public_path('storage'),
+            dirname($basePath) . '/public_html/storage',
+            $basePath . '/public_html/storage',
+        ]);
+
+        $createdLinks = [];
+        foreach ($candidateLinks as $link) {
+            $parentDir = dirname($link);
+            if (!file_exists($parentDir) || !is_dir($parentDir)) {
+                continue;
+            }
+
+            // Si es un enlace simbólico existente, eliminarlo para recrearlo limpiamente
+            if (is_link($link)) {
+                @unlink($link);
+            } elseif (is_dir($link)) {
+                $scan = @scandir($link);
+                if (is_array($scan) && count($scan) <= 2) {
+                    @rmdir($link);
+                }
+            }
+
+            // Intentar crear el symlink
+            $success = false;
+            try {
+                if (@symlink($target, $link)) {
+                    $success = true;
+                    $createdLinks[] = "<span style='color:green;'>&check; Enlace creado con éxito: <code>$link &rarr; $target</code></span>";
+                }
+            } catch (\Throwable $e) {
+                // Fallback
+            }
+
+            if (!$success && !file_exists($link)) {
+                $createdLinks[] = "<span style='color:red;'>&cross; No se pudo crear symlink en: <code>$link</code></span>";
+            }
+        }
+
+        // Intentar también el comando Artisan estándar
+        try {
+            \Illuminate\Support\Facades\Artisan::call('storage:link');
+            $artisanOut = \Illuminate\Support\Facades\Artisan::output();
+        } catch (\Throwable $e) {
+            $artisanOut = $e->getMessage();
+        }
+
+        $results[] = "<h3>2. Enlaces Simbólicos de Storage</h3>" . 
+            (count($createdLinks) ? implode('<br>', $createdLinks) . '<br><br>' : '') .
+            "<b>Artisan storage:link output:</b><pre>" . e($artisanOut) . "</pre>";
+
+        // 3. Comprobar qué archivos existen en storage/app/public
+        $scan = @scandir($target);
+        $fileList = is_array($scan) ? implode(', ', array_diff($scan, ['.', '..'])) : 'Carpeta vacía o sin permisos';
+        $results[] = "<h3>3. Contenido en storage/app/public</h3><p>[" . e($fileList) . "]</p>";
+
+        return "<div style='font-family:sans-serif; max-width:750px; margin:40px auto; padding:24px; border:1px solid #ddd; border-radius:12px; background:#fafafa;'>" . implode('<hr>', $results) . "</div>";
+
+    } catch (\Throwable $fatal) {
+        return "<div style='font-family:sans-serif; max-width:750px; margin:40px auto; padding:24px; color:#b00; border:1px solid #f99; border-radius:12px; background:#fff0f0;'>" .
+               "<h2>Error en la ejecución</h2>" .
+               "<p><b>Mensaje:</b> " . e($fatal->getMessage()) . "</p>" .
+               "<p><b>Archivo:</b> " . e($fatal->getFile()) . " (Línea: " . $fatal->getLine() . ")</p>" .
+               "<pre>" . e($fatal->getTraceAsString()) . "</pre>" .
+               "</div>";
     }
-
-    if (!$symlinkSuccess) {
-        \Illuminate\Support\Facades\Artisan::call('storage:link');
-        $results[] = "<h3>2. Artisan storage:link</h3><pre>" . \Illuminate\Support\Facades\Artisan::output() . "</pre>";
-    }
-
-    // 3. Comprobar qué archivos existen en storage/app/public
-    $files = @scandir($target);
-    $fileList = $files ? implode(', ', array_diff($files, ['.', '..'])) : 'Carpeta vacía o sin permisos';
-    $results[] = "<h3>3. Contenido encontrado en storage/app/public</h3><p>[" . e($fileList) . "]</p>";
-
-    return "<div style='font-family:sans-serif; max-width:700px; margin:40px auto; padding:24px; border:1px solid #ddd; border-radius:12px; background:#fafafa;'>" . implode('<hr>', $results) . "</div>";
 });
 
 
