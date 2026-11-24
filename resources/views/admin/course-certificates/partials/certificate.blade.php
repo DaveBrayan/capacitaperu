@@ -117,6 +117,37 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
+
+    /* CUADRÍCULA GUÍA EN LA MESA DE TRABAJO */
+    .cert-grid-overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 20;
+        transition: opacity 0.2s ease;
+    }
+
+    /* Cuadrícula fina de 20px con líneas maestras cada 100px */
+    .cert-grid-20 {
+        background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+        background-image: 
+            linear-gradient(to right, rgba(14, 165, 233, 0.18) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(14, 165, 233, 0.18) 1px, transparent 1px),
+            linear-gradient(to right, rgba(14, 165, 233, 0.45) 1.5px, transparent 1.5px),
+            linear-gradient(to bottom, rgba(14, 165, 233, 0.45) 1.5px, transparent 1.5px);
+        background-position: 0 0;
+    }
+
+    /* Cuadrícula estándar de 50px con líneas maestras cada 100px */
+    .cert-grid-50 {
+        background-size: 50px 50px, 50px 50px, 100px 100px, 100px 100px;
+        background-image: 
+            linear-gradient(to right, rgba(14, 165, 233, 0.18) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(14, 165, 233, 0.18) 1px, transparent 1px),
+            linear-gradient(to right, rgba(14, 165, 233, 0.45) 1.5px, transparent 1.5px),
+            linear-gradient(to bottom, rgba(14, 165, 233, 0.45) 1.5px, transparent 1.5px);
+        background-position: 0 0;
+    }
 </style>
 
 <script>
@@ -379,12 +410,40 @@
     </div>
 
     <div class="flex-1 overflow-hidden relative bg-[#1e293b] flex flex-col" id="workspace-container">
-        <div class="bg-black/20 backdrop-blur-sm border-b border-white/5 p-3 flex justify-between items-center z-20">
-            <span class="text-[10px] font-black text-white/40 uppercase ml-2">Mesa de Trabajo A4</span>
-            <div class="flex items-center gap-2">
-                <button type="button" onclick="zoomCanvas(-0.1)" class="p-2 text-white/60 hover:text-white"><i class="ph-bold ph-minus"></i></button>
-                <span class="text-[10px] font-bold text-white/80 min-w-[40px] text-center" id="zoom-level-indicator">100%</span>
-                <button type="button" onclick="zoomCanvas(0.1)" class="p-2 text-white/60 hover:text-white"><i class="ph-bold ph-plus"></i></button>
+        <!-- BARRA SUPERIOR DE WORKSPACE CON CONTROLES DE CUADRÍCULA Y ZOOM -->
+        <div class="bg-black/20 backdrop-blur-sm border-b border-white/5 p-2.5 sm:p-3 flex flex-wrap justify-between items-center gap-2 z-20">
+            <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <span class="text-[10px] font-black text-white/50 uppercase ml-1">Mesa de Trabajo A4</span>
+                <div class="h-4 w-px bg-white/10 hidden sm:block"></div>
+
+                <!-- Botón Mostrar/Ocultar Cuadrícula -->
+                <button type="button" onclick="toggleCanvasGrid()" id="btn-toggle-grid" 
+                        class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all bg-[#0AD1C8]/20 text-[#0AD1C8] border border-[#0AD1C8]/40 hover:bg-[#0AD1C8]/30 shadow-sm"
+                        title="Activar u ocultar cuadrículas guía">
+                    <i class="ph-bold ph-grid-four text-sm" id="grid-icon"></i>
+                    <span class="text-[11px]" id="grid-status-text">Cuadrícula: Sí</span>
+                </button>
+
+                <!-- Selector de paso de cuadrícula: 20px / 50px -->
+                <div id="grid-size-controls" class="flex items-center gap-0.5 bg-white/5 rounded-lg p-0.5 border border-white/10 text-[10px] font-semibold">
+                    <button type="button" onclick="setGridSize(20)" id="grid-size-20" class="px-2 py-0.5 rounded text-white bg-white/20 font-bold transition-all" title="Paso fino (20px)">20px</button>
+                    <button type="button" onclick="setGridSize(50)" id="grid-size-50" class="px-2 py-0.5 rounded text-white/50 hover:text-white transition-all" title="Paso estándar (50px)">50px</button>
+                </div>
+
+                <!-- Ajustar a Cuadrícula (Snap) -->
+                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-medium text-white/70 hover:text-white select-none pl-1" title="Ajustar automáticamente elementos a la cuadrícula al moverlos">
+                    <input type="checkbox" id="snap-to-grid-checkbox" onchange="toggleSnapToGrid(this.checked)" class="rounded bg-white/10 border-white/20 text-[#0AD1C8] focus:ring-0 w-3.5 h-3.5 cursor-pointer">
+                    <span class="text-[11px] hidden md:inline">Ajustar a cuadrícula</span>
+                    <span class="text-[11px] inline md:hidden">Snap</span>
+                </label>
+            </div>
+
+            <!-- Controles de Zoom -->
+            <div class="flex items-center gap-1 sm:gap-2">
+                <button type="button" onclick="zoomCanvas(-0.1)" class="p-1.5 sm:p-2 text-white/60 hover:text-white rounded hover:bg-white/5 transition-colors" title="Alejar"><i class="ph-bold ph-minus"></i></button>
+                <span class="text-[10px] font-bold text-white/80 min-w-[36px] text-center" id="zoom-level-indicator">100%</span>
+                <button type="button" onclick="zoomCanvas(0.1)" class="p-1.5 sm:p-2 text-white/60 hover:text-white rounded hover:bg-white/5 transition-colors" title="Acercar"><i class="ph-bold ph-plus"></i></button>
+                <button type="button" onclick="fitCanvas()" class="p-1.5 sm:p-2 text-white/60 hover:text-white rounded hover:bg-white/5 transition-colors" title="Ajustar a pantalla"><i class="ph-bold ph-arrows-out"></i></button>
             </div>
         </div>
 
@@ -399,6 +458,22 @@
                         </div>
                     </div>
                     <div id="elements-layer" class="absolute inset-0 z-10 w-full h-full"></div>
+
+                    <!-- CAPA DE CUADRÍCULA GUÍA (HOJA 1) -->
+                    <div id="cert-grid-1" class="cert-grid-overlay cert-grid-20 absolute inset-0 pointer-events-none z-20">
+                        <!-- Eje central vertical -->
+                        <div class="absolute left-1/2 top-0 bottom-0 w-0 border-l border-dashed border-red-500/70 pointer-events-none z-10" title="Centro Vertical">
+                            <span class="absolute top-2 left-1 bg-red-500 text-white font-black text-[9px] px-1.5 py-0.5 rounded shadow tracking-wider uppercase pointer-events-none opacity-85">Centro</span>
+                        </div>
+                        <!-- Eje central horizontal -->
+                        <div class="absolute top-1/2 left-0 right-0 h-0 border-t border-dashed border-red-500/70 pointer-events-none z-10" title="Centro Horizontal">
+                            <span class="absolute left-2 top-1 bg-red-500 text-white font-black text-[9px] px-1.5 py-0.5 rounded shadow tracking-wider uppercase pointer-events-none opacity-85">Centro</span>
+                        </div>
+                        <!-- Margen de seguridad (40px) -->
+                        <div class="absolute inset-[40px] border border-dashed border-amber-500/40 rounded-sm pointer-events-none z-10">
+                            <span class="absolute top-1 right-2 text-amber-700/80 bg-amber-100/90 text-[8px] font-bold px-1.5 py-0.5 rounded pointer-events-none">Margen (40px)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -412,6 +487,22 @@
                         </div>
                     </div>
                     <div id="elements-layer-2" class="absolute inset-0 z-10 w-full h-full"></div>
+
+                    <!-- CAPA DE CUADRÍCULA GUÍA (HOJA 2) -->
+                    <div id="cert-grid-2" class="cert-grid-overlay cert-grid-20 absolute inset-0 pointer-events-none z-20">
+                        <!-- Eje central vertical -->
+                        <div class="absolute left-1/2 top-0 bottom-0 w-0 border-l border-dashed border-red-500/70 pointer-events-none z-10" title="Centro Vertical">
+                            <span class="absolute top-2 left-1 bg-red-500 text-white font-black text-[9px] px-1.5 py-0.5 rounded shadow tracking-wider uppercase pointer-events-none opacity-85">Centro</span>
+                        </div>
+                        <!-- Eje central horizontal -->
+                        <div class="absolute top-1/2 left-0 right-0 h-0 border-t border-dashed border-red-500/70 pointer-events-none z-10" title="Centro Horizontal">
+                            <span class="absolute left-2 top-1 bg-red-500 text-white font-black text-[9px] px-1.5 py-0.5 rounded shadow tracking-wider uppercase pointer-events-none opacity-85">Centro</span>
+                        </div>
+                        <!-- Margen de seguridad (40px) -->
+                        <div class="absolute inset-[40px] border border-dashed border-amber-500/40 rounded-sm pointer-events-none z-10">
+                            <span class="absolute top-1 right-2 text-amber-700/80 bg-amber-100/90 text-[8px] font-bold px-1.5 py-0.5 rounded pointer-events-none">Margen (40px)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -474,6 +565,7 @@
         if(sel) sel.value = certState.pages;
 
         renderCanvas();
+        initGridSettings();
         setTimeout(updateZoom, 500);
     });
 
@@ -914,6 +1006,13 @@
                 const size = Math.max(newW, newH); newW = size; newH = size;
             }
 
+            if (window.snapToGridEnabled) {
+                const snapStep = window.gridCurrentSize || 20;
+                newW = Math.round(newW / snapStep) * snapStep;
+                newH = Math.round(newH / snapStep) * snapStep;
+                if (newW < 20) newW = 20; if (newH < 20) newH = 20;
+            }
+
             const intW = Math.round(newW);
             const intH = Math.round(newH);
 
@@ -938,8 +1037,18 @@
         const deltaY = (e.clientY - dragOffset.mouseY) / currentZoom;
         const found = getElementAndPage(dragElId);
         const el = found.el;
-        el.x = dragOffset.elX + deltaX;
-        el.y = dragOffset.elY + deltaY;
+
+        let targetX = dragOffset.elX + deltaX;
+        let targetY = dragOffset.elY + deltaY;
+
+        if (window.snapToGridEnabled) {
+            const snapStep = window.gridCurrentSize || 20;
+            targetX = Math.round(targetX / snapStep) * snapStep;
+            targetY = Math.round(targetY / snapStep) * snapStep;
+        }
+
+        el.x = targetX;
+        el.y = targetY;
         const elDiv = document.getElementById(dragElId);
         elDiv.style.left = el.x + 'px';
         elDiv.style.top = el.y + 'px';
@@ -1020,5 +1129,79 @@
             'font-opensans': "'Open Sans', sans-serif"
         };
         return f[k] || 'sans-serif';
+    }
+
+    // ==========================
+    // GESTIÓN DE CUADRÍCULA GUÍA
+    // ==========================
+    window.isGridVisible = localStorage.getItem('cert_designer_grid_visible') !== 'false'; // Por defecto visible
+    window.gridCurrentSize = parseInt(localStorage.getItem('cert_designer_grid_size')) || 20;
+    window.snapToGridEnabled = localStorage.getItem('cert_designer_snap_grid') === 'true';
+
+    function initGridSettings() {
+        setGridSize(window.gridCurrentSize, false);
+        applyGridVisibility();
+        const snapChk = document.getElementById('snap-to-grid-checkbox');
+        if (snapChk) snapChk.checked = window.snapToGridEnabled;
+    }
+
+    function toggleCanvasGrid() {
+        window.isGridVisible = !window.isGridVisible;
+        localStorage.setItem('cert_designer_grid_visible', window.isGridVisible);
+        applyGridVisibility();
+    }
+
+    function applyGridVisibility() {
+        const grid1 = document.getElementById('cert-grid-1');
+        const grid2 = document.getElementById('cert-grid-2');
+        const btn = document.getElementById('btn-toggle-grid');
+        const statusText = document.getElementById('grid-status-text');
+        const sizeControls = document.getElementById('grid-size-controls');
+
+        if (grid1) grid1.style.display = window.isGridVisible ? 'block' : 'none';
+        if (grid2) grid2.style.display = window.isGridVisible ? 'block' : 'none';
+
+        if (btn) {
+            if (window.isGridVisible) {
+                btn.className = "flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all bg-[#0AD1C8]/20 text-[#0AD1C8] border border-[#0AD1C8]/40 hover:bg-[#0AD1C8]/30 shadow-sm";
+                if (statusText) statusText.innerText = "Cuadrícula: Sí";
+                if (sizeControls) sizeControls.style.opacity = '1';
+            } else {
+                btn.className = "flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all bg-white/10 text-white/60 border border-white/10 hover:bg-white/15";
+                if (statusText) statusText.innerText = "Cuadrícula: No";
+                if (sizeControls) sizeControls.style.opacity = '0.4';
+            }
+        }
+    }
+
+    function setGridSize(size, save = true) {
+        window.gridCurrentSize = size;
+        if (save) localStorage.setItem('cert_designer_grid_size', size);
+        const grid1 = document.getElementById('cert-grid-1');
+        const grid2 = document.getElementById('cert-grid-2');
+        const btn20 = document.getElementById('grid-size-20');
+        const btn50 = document.getElementById('grid-size-50');
+
+        [grid1, grid2].forEach(g => {
+            if (g) {
+                g.classList.remove('cert-grid-20', 'cert-grid-50');
+                g.classList.add('cert-grid-' + size);
+            }
+        });
+
+        if (btn20 && btn50) {
+            if (size === 20) {
+                btn20.className = "px-2 py-0.5 rounded text-white bg-white/20 font-bold transition-all";
+                btn50.className = "px-2 py-0.5 rounded text-white/50 hover:text-white transition-all";
+            } else {
+                btn50.className = "px-2 py-0.5 rounded text-white bg-white/20 font-bold transition-all";
+                btn20.className = "px-2 py-0.5 rounded text-white/50 hover:text-white transition-all";
+            }
+        }
+    }
+
+    function toggleSnapToGrid(enabled) {
+        window.snapToGridEnabled = enabled;
+        localStorage.setItem('cert_designer_snap_grid', enabled);
     }
 </script>
