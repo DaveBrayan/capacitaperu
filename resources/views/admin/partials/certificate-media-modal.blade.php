@@ -323,10 +323,20 @@
                 renderFilteredMedia();
 
                 if (autoSelectUrl) {
-                    const found = allMediaFiles.find(item => item.url === autoSelectUrl);
+                    const targetName = autoSelectUrl.split('/').pop();
+                    const found = allMediaFiles.find(item => 
+                        item.url === autoSelectUrl || 
+                        (item.name && item.name === targetName) || 
+                        (item.url && item.url.split('/').pop() === targetName)
+                    );
                     if (found) selectMediaForPreview(found);
                 } else if (selectedMediaItemData) {
-                    const found = allMediaFiles.find(item => item.url === selectedMediaItemData.url);
+                    const targetName = selectedMediaItemData.name || (selectedMediaItemData.url ? selectedMediaItemData.url.split('/').pop() : '');
+                    const found = allMediaFiles.find(item => 
+                        item.url === selectedMediaItemData.url ||
+                        (targetName && item.name === targetName) ||
+                        (targetName && item.url && item.url.split('/').pop() === targetName)
+                    );
                     if (found) selectMediaForPreview(found);
                 }
             })
@@ -459,10 +469,12 @@
                 ? '<div class="absolute top-2 left-2 w-6 h-6 rounded-full bg-[#FF7A00] text-white flex items-center justify-center shadow z-10"><i class="ph-bold ph-check text-xs"></i></div>' 
                 : '';
 
+            const safeName = (item.name || '').replace(/'/g, "\\'");
             card.innerHTML = `
                 ${checkBadge}
                 <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-xl bg-gray-50/60 p-1 pointer-events-none">
-                    <img src="${item.url}" alt="${item.name}" loading="lazy" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-200">
+                    <img src="${item.url}" alt="${item.name}" loading="lazy" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-200"
+                         onerror="if(!this.dataset.fallbackTried){ this.dataset.fallbackTried='1'; this.src='{{ url('public-media') }}/' + encodeURIComponent('${safeName}'); }">
                 </div>
                 <div class="pt-1.5 flex items-center justify-between text-[11px] text-gray-600 font-bold truncate pointer-events-none">
                     <span class="truncate pr-1" title="${item.name}">${item.name}</span>
@@ -502,10 +514,28 @@
 
         if (img) {
             dims.innerText = 'Calculando...';
-            img.src = item.url;
+            delete img.dataset.fallbackTried;
+
             img.onload = function() {
                 if (dims) dims.innerText = `${this.naturalWidth} × ${this.naturalHeight} px`;
             };
+
+            img.onerror = function() {
+                if (!this.dataset.fallbackTried) {
+                    this.dataset.fallbackTried = "true";
+                    const cleanName = item.name || (item.url ? item.url.split('/').pop() : '');
+                    if (cleanName) {
+                        const fallbackUrl = '{{ url("public-media") }}/' + encodeURIComponent(cleanName);
+                        if (this.src !== fallbackUrl) {
+                            this.src = fallbackUrl;
+                            return;
+                        }
+                    }
+                }
+                if (dims) dims.innerText = 'Error al cargar';
+            };
+
+            img.src = item.url;
         }
 
         if (renameInput) {
@@ -825,6 +855,36 @@
             });
             return;
         }
+
+        // Mostrar vista previa inmediata en el panel izquierdo con URL local mientras se sube
+        try {
+            const objectUrl = URL.createObjectURL(file);
+            const emptyView = document.getElementById('media-preview-empty');
+            const activeView = document.getElementById('media-preview-active');
+            const badge = document.getElementById('media-preview-badge');
+            const previewImg = document.getElementById('media-preview-img');
+            const renameInput = document.getElementById('media-rename-input');
+            const sizeEl = document.getElementById('media-preview-size');
+            const dateEl = document.getElementById('media-preview-date');
+            const dims = document.getElementById('media-preview-dims');
+
+            if (emptyView) emptyView.classList.add('hidden');
+            if (activeView) activeView.classList.remove('hidden');
+            if (badge) badge.classList.remove('hidden');
+            if (renameInput) renameInput.value = file.name;
+            if (sizeEl) sizeEl.innerText = formatBytesHelper(file.size);
+            if (dateEl) dateEl.innerText = 'Subiendo...';
+            if (dims) dims.innerText = 'Subiendo...';
+            if (previewImg) {
+                delete previewImg.dataset.fallbackTried;
+                previewImg.onload = function() {
+                    if (dims && dims.innerText !== 'Subiendo...') {
+                        dims.innerText = `${this.naturalWidth} × ${this.naturalHeight} px`;
+                    }
+                };
+                previewImg.src = objectUrl;
+            }
+        } catch(e) {}
 
         const loader = document.getElementById('media-upload-loader');
         if (loader) loader.classList.remove('hidden');

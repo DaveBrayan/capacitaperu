@@ -94,17 +94,38 @@ Route::get('/certificado-docente/ver/{uuid}', [\App\Http\Controllers\AdminCourse
 
 // Servidor de Media Privado/Público
 Route::get('/public-media/{filename}', function ($filename) {
-    $path = storage_path('app/public/media/' . $filename);
+    $cleanFilename = basename($filename);
+    $path = storage_path('app/public/media/' . $cleanFilename);
     if (!file_exists($path)) {
         $path = storage_path('app/public/' . $filename);
+    }
+    if (!file_exists($path)) {
+        $path = storage_path('app/public/' . $cleanFilename);
+    }
+    if (!file_exists($path)) {
+        // Buscar en posibles carpetas de public_html
+        $base = base_path();
+        $candidates = [
+            dirname($base) . '/public_html/storage/media/' . $cleanFilename,
+            $base . '/public_html/storage/media/' . $cleanFilename,
+            public_path('storage/media/' . $cleanFilename),
+        ];
+        foreach ($candidates as $cand) {
+            if (file_exists($cand)) {
+                $path = $cand;
+                break;
+            }
+        }
     }
     if (!file_exists($path)) {
         abort(404);
     }
     $file = \Illuminate\Support\Facades\File::get($path);
     $type = \Illuminate\Support\Facades\File::mimeType($path);
-    $response = \Illuminate\Support\Facades\Response::make($file, 200);
-    $response->header("Content-Type", $type);
+    $response = \Illuminate\Support\Facades\Response::make($file, 200, [
+        'Content-Type' => $type,
+        'Cache-Control' => 'public, max-age=31536000',
+    ]);
     return $response;
 })->where('filename', '.*')->name('media.show');
 
@@ -112,8 +133,34 @@ Route::get('/public-media/{filename}', function ($filename) {
 Route::get('/storage/{path}', function ($path) {
     $filePath = storage_path('app/public/' . $path);
     if (!file_exists($filePath)) {
-        abort(404);
+        $altPath = storage_path('app/public/media/' . basename($path));
+        if (file_exists($altPath)) {
+            $filePath = $altPath;
+        } else {
+            abort(404);
+        }
     }
+
+    // Auto-sincronizar hacia public_html/storage si existe como directorio separado
+    try {
+        $base = base_path();
+        $publicDirs = [
+            dirname($base) . '/public_html/storage',
+            $base . '/public_html/storage',
+            $base . '/../public_html/storage',
+            public_path('storage'),
+        ];
+        foreach ($publicDirs as $pubDir) {
+            if (is_dir($pubDir) && !is_link($pubDir)) {
+                $targetFile = $pubDir . '/' . $path;
+                if (!file_exists($targetFile)) {
+                    @mkdir(dirname($targetFile), 0755, true);
+                    @copy($filePath, $targetFile);
+                }
+            }
+        }
+    } catch (\Throwable $e) {}
+
     $file = \Illuminate\Support\Facades\File::get($filePath);
     $type = \Illuminate\Support\Facades\File::mimeType($filePath);
     return \Illuminate\Support\Facades\Response::make($file, 200, [

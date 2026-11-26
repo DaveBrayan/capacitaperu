@@ -10,10 +10,133 @@ use Illuminate\Support\Str;
 class AdminMediaController extends Controller
 {
     /**
+     * Obtiene todas las carpetas públicas donde debe sincronizarse el storage
+     * (soportando tanto local como cPanel public_html)
+     */
+    protected function getPublicStoragePaths(): array
+    {
+        $basePath = base_path();
+        $candidates = [
+            public_path('storage'),
+            dirname($basePath) . '/public_html/storage',
+            $basePath . '/public_html/storage',
+            $basePath . '/../public_html/storage',
+        ];
+
+        $paths = [];
+        foreach ($candidates as $candidate) {
+            $parent = dirname($candidate);
+            if (File::exists($parent) && File::isDirectory($parent)) {
+                $paths[] = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $candidate);
+            }
+        }
+
+        return array_unique($paths);
+    }
+
+    /**
+     * Sincroniza un archivo específico desde storage/app/public hacia las carpetas públicas
+     */
+    protected function syncFileToPublicStorage(string $relativePath): void
+    {
+        $cleanRel = ltrim(str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $relativePath), DIRECTORY_SEPARATOR);
+        $sourcePath = storage_path('app' . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . $cleanRel);
+
+        if (!File::exists($sourcePath)) {
+            return;
+        }
+
+        foreach ($this->getPublicStoragePaths() as $publicStorage) {
+            // Si el destino es un enlace simbólico que ya apunta a storage/app/public, no copiar
+            if (is_link($publicStorage)) {
+                continue;
+            }
+
+            $destPath = $publicStorage . DIRECTORY_SEPARATOR . $cleanRel;
+            $destDir = dirname($destPath);
+
+            if (!File::isDirectory($destDir)) {
+                File::makeDirectory($destDir, 0755, true, true);
+            }
+
+            if (!File::exists($destPath) || File::lastModified($sourcePath) > File::lastModified($destPath)) {
+                @copy($sourcePath, $destPath);
+            }
+        }
+    }
+
+    /**
+     * Renombra un archivo en todas las carpetas públicas
+     */
+    protected function renameFileInPublicStorage(string $oldRelativePath, string $newRelativePath): void
+    {
+        $oldRel = ltrim(str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $oldRelativePath), DIRECTORY_SEPARATOR);
+        $newRel = ltrim(str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $newRelativePath), DIRECTORY_SEPARATOR);
+
+        foreach ($this->getPublicStoragePaths() as $publicStorage) {
+            if (is_link($publicStorage)) {
+                continue;
+            }
+
+            $oldDest = $publicStorage . DIRECTORY_SEPARATOR . $oldRel;
+            $newDest = $publicStorage . DIRECTORY_SEPARATOR . $newRel;
+
+            $newDir = dirname($newDest);
+            if (!File::isDirectory($newDir)) {
+                File::makeDirectory($newDir, 0755, true, true);
+            }
+
+            if (File::exists($oldDest)) {
+                @rename($oldDest, $newDest);
+            }
+        }
+
+        $this->syncFileToPublicStorage($newRel);
+    }
+
+    /**
+     * Elimina un archivo de todas las carpetas públicas
+     */
+    protected function deleteFileInPublicStorage(string $relativePath): void
+    {
+        $cleanRel = ltrim(str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $relativePath), DIRECTORY_SEPARATOR);
+
+        foreach ($this->getPublicStoragePaths() as $publicStorage) {
+            if (is_link($publicStorage)) {
+                continue;
+            }
+
+            $destPath = $publicStorage . DIRECTORY_SEPARATOR . $cleanRel;
+            if (File::exists($destPath)) {
+                @unlink($destPath);
+            }
+        }
+    }
+
+    /**
+     * Sincroniza todos los archivos de media hacia las carpetas públicas
+     */
+    protected function syncAllMediaFiles(): void
+    {
+        $sourceDir = storage_path('app/public/media');
+        if (!File::isDirectory($sourceDir)) {
+            return;
+        }
+
+        $files = File::files($sourceDir);
+        foreach ($files as $file) {
+            $this->syncFileToPublicStorage('media/' . $file->getFilename());
+        }
+    }
+
+    /**
      * Lista todas las imágenes de la carpeta media para la galería.
      */
     public function list()
     {
+        // Auto-sincronizar por si algún archivo en el storage aún no fue copiado a public_html
+        $this->syncAllMediaFiles();
+
         $disk = Storage::disk('public');
         $files = $disk->files('media');
         
@@ -23,9 +146,11 @@ class AdminMediaController extends Controller
                 return preg_match('/\.(jpg|jpeg|png|gif|webp|svg)$/i', $file);
             })
             ->map(function ($file) use ($disk) {
+                $filename = basename($file);
                 return [
                     'url' => asset('storage/' . $file),
-                    'name' => basename($file),
+                    'fallback_url' => url('public-media/' . $filename),
+                    'name' => $filename,
                     'size' => $disk->exists($file) ? $disk->size($file) : 0,
                     'last_modified' => $disk->exists($file) ? $disk->lastModified($file) : 0,
                 ];
@@ -49,10 +174,16 @@ class AdminMediaController extends Controller
             $path = $request->file('file')->store('media', 'public');
             $disk = Storage::disk('public');
             
-            // Devolver metadatos completos y la URL pública absoluta
+            // Sincronizar inmediatamente a public_html/storage y public/storage
+            $this->syncFileToPublicStorage($path);
+
+            $filename = basename($path);
+
+            // Devolver metadatos completos y la URL pública absoluta con fallback
             return response()->json([
                 'url' => asset('storage/' . $path),
-                'name' => basename($path),
+                'fallback_url' => url('public-media/' . $filename),
+                'name' => $filename,
                 'size' => $disk->exists($path) ? $disk->size($path) : 0,
                 'last_modified' => $disk->exists($path) ? $disk->lastModified($path) : time(),
                 'success' => true
@@ -103,6 +234,7 @@ class AdminMediaController extends Controller
 
         if ($newPath !== $oldPath) {
             Storage::disk('public')->move($oldPath, $newPath);
+            $this->renameFileInPublicStorage($oldPath, $newPath);
 
             // Actualizar referencias si está en plantillas de certificados
             $oldRef = $oldPath;
@@ -137,6 +269,7 @@ class AdminMediaController extends Controller
         return response()->json([
             'success' => true,
             'url' => asset('storage/' . $newPath),
+            'fallback_url' => url('public-media/' . $newFileName),
             'name' => $newFileName,
             'size' => $disk->exists($newPath) ? $disk->size($newPath) : 0,
             'last_modified' => $disk->exists($newPath) ? $disk->lastModified($newPath) : time(),
@@ -176,6 +309,7 @@ class AdminMediaController extends Controller
 
         if (Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
+            $this->deleteFileInPublicStorage($path);
             return response()->json(['success' => true]);
         }
 
@@ -183,12 +317,26 @@ class AdminMediaController extends Controller
     }
 
     /**
-     * Método opcional show por si alguna ruta antigua lo llama,
-     * aunque ya no se usa para la galería.
+     * Servidor directo de imagen por PHP con soporte para almacenamiento local y cPanel.
      */
     public function show($filename)
     {
-        $path = storage_path('app/public/media/' . $filename);
+        $cleanFilename = basename($filename);
+        $path = storage_path('app/public/media/' . $cleanFilename);
+
+        if (!File::exists($path)) {
+            $path = storage_path('app/public/' . $cleanFilename);
+        }
+
+        if (!File::exists($path)) {
+            foreach ($this->getPublicStoragePaths() as $pub) {
+                $check = $pub . DIRECTORY_SEPARATOR . 'media' . DIRECTORY_SEPARATOR . $cleanFilename;
+                if (File::exists($check)) {
+                    $path = $check;
+                    break;
+                }
+            }
+        }
 
         if (!File::exists($path)) {
             abort(404);
@@ -197,6 +345,8 @@ class AdminMediaController extends Controller
         $file = File::get($path);
         $type = File::mimeType($path);
 
-        return response($file, 200)->header("Content-Type", $type);
+        return response($file, 200)
+            ->header("Content-Type", $type)
+            ->header("Cache-Control", "public, max-age=31536000");
     }
 }
