@@ -147,14 +147,16 @@ class AdminMediaController extends Controller
             })
             ->map(function ($file) use ($disk) {
                 $filename = basename($file);
+                $filePath = 'media/' . $filename;
                 return [
                     'url' => asset('storage/' . $file),
                     'fallback_url' => url('public-media/' . $filename),
                     'name' => $filename,
-                    'size' => $disk->exists($file) ? $disk->size($file) : 0,
-                    'last_modified' => $disk->exists($file) ? $disk->lastModified($file) : 0,
+                    'size' => $disk->exists($filePath) ? $disk->size($filePath) : 0,
+                    'last_modified' => $disk->exists($filePath) ? $disk->lastModified($filePath) : 0,
                 ];
             })
+            ->sortByDesc('last_modified')
             ->values();
 
         return response()->json($assets);
@@ -206,12 +208,26 @@ class AdminMediaController extends Controller
         $url = $request->input('url');
         $rawNewName = trim($request->input('new_name'));
 
-        // Convertir URL a path relativo
-        $oldPath = str_replace(asset('storage/'), '', $url);
-        $oldPath = ltrim($oldPath, '/');
+        // Extraer nombre del archivo sin depender de dominios o protocolos
+        $parsedPath = parse_url($url, PHP_URL_PATH) ?? $url;
+        $oldFileName = basename($parsedPath);
+        $oldPath = 'media/' . $oldFileName;
 
         if (!Storage::disk('public')->exists($oldPath)) {
-            return response()->json(['error' => 'El archivo no fue encontrado en el servidor.'], 404);
+            // Verificar si existe en carpetas públicas y restaurar
+            $foundInPublic = false;
+            foreach ($this->getPublicStoragePaths() as $pub) {
+                $check = $pub . DIRECTORY_SEPARATOR . 'media' . DIRECTORY_SEPARATOR . $oldFileName;
+                if (File::exists($check)) {
+                    $foundInPublic = true;
+                    @mkdir(storage_path('app/public/media'), 0755, true);
+                    @copy($check, storage_path('app/public/' . $oldPath));
+                    break;
+                }
+            }
+            if (!$foundInPublic && !Storage::disk('public')->exists($oldPath)) {
+                return response()->json(['error' => 'El archivo no fue encontrado en el servidor.'], 404);
+            }
         }
 
         $extension = pathinfo($oldPath, PATHINFO_EXTENSION);
@@ -282,38 +298,62 @@ class AdminMediaController extends Controller
     public function delete(Request $request)
     {
         $url = $request->input('url');
+        $inputFilename = $request->input('filename');
         
-        if (!$url) {
-            return response()->json(['error' => 'URL no proporcionada'], 400);
+        if (!$url && !$inputFilename) {
+            return response()->json(['error' => 'URL o nombre de archivo no proporcionado'], 400);
         }
 
-        // Convertir URL absoluta a path relativo del storage
-        // Ej: http://dominio.com/storage/media/foto.jpg -> media/foto.jpg
-        $path = str_replace(asset('storage/'), '', $url);
-        
-        // Limpieza extra por si acaso la URL venía diferente
-        $path = ltrim($path, '/');
+        // Extraer el nombre real de archivo sin importar dominio, protocolo o fallback
+        if ($inputFilename) {
+            $filename = basename($inputFilename);
+        } else {
+            $parsedPath = parse_url($url, PHP_URL_PATH) ?? $url;
+            $filename = basename($parsedPath);
+        }
+
+        $path = 'media/' . $filename;
 
         // Verificar si la imagen está en uso en las plantillas guardadas en la BD
-        $inCourse = \App\Models\Course::where('certificate_template', 'like', '%' . $path . '%')->exists();
-        $inIndividual = \App\Models\IndividualCertificate::where('certificate_template', 'like', '%' . $path . '%')->exists();
-        $inCourseCert = \App\Models\CourseCertificate::where('certificate_template', 'like', '%' . $path . '%')->exists();
+        $inCourse = \App\Models\Course::where('certificate_template', 'like', '%' . $filename . '%')->exists();
+        $inIndividual = \App\Models\IndividualCertificate::where('certificate_template', 'like', '%' . $filename . '%')->exists();
+        $inCourseCert = \App\Models\CourseCertificate::where('certificate_template', 'like', '%' . $filename . '%')->exists();
 
         if ($inCourse || $inIndividual || $inCourseCert) {
             return response()->json([
                 'success' => false,
                 'used' => true,
-                'error' => 'Esta imagen no se puede eliminar porque se está usando.'
+                'error' => 'Esta imagen no se puede eliminar porque se está usando en una plantilla de certificado.'
             ]);
         }
 
+        $deleted = false;
+
+        // 1. Eliminar de Storage::disk('public')
         if (Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
-            $this->deleteFileInPublicStorage($path);
-            return response()->json(['success' => true]);
+            $deleted = true;
         }
 
-        return response()->json(['error' => 'Archivo no encontrado o ya eliminado'], 404);
+        // 2. Eliminar archivo físico en storage_path si existe
+        $sourcePath = storage_path('app/public/' . $path);
+        if (File::exists($sourcePath)) {
+            @unlink($sourcePath);
+            $deleted = true;
+        }
+
+        // 3. Eliminar de todas las carpetas públicas (public/storage y public_html/storage)
+        $this->deleteFileInPublicStorage($path);
+
+        foreach ($this->getPublicStoragePaths() as $pub) {
+            $dest = $pub . DIRECTORY_SEPARATOR . 'media' . DIRECTORY_SEPARATOR . $filename;
+            if (File::exists($dest)) {
+                @unlink($dest);
+                $deleted = true;
+            }
+        }
+
+        return response()->json(['success' => true]);
     }
 
     /**

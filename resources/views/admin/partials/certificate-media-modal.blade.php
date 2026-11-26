@@ -312,11 +312,16 @@
                     items.sort((a, b) => {
                         const idxA = savedOrder.indexOf(a.url);
                         const idxB = savedOrder.indexOf(b.url);
-                        if (idxA === -1 && idxB === -1) return 0;
-                        if (idxA === -1) return -1; // Nuevos al principio
+                        if (idxA === -1 && idxB === -1) {
+                            return (b.last_modified || 0) - (a.last_modified || 0);
+                        }
+                        if (idxA === -1) return -1; // Nuevas imágenes siempre al inicio del mosaico
                         if (idxB === -1) return 1;
                         return idxA - idxB;
                     });
+                } else {
+                    // Por defecto: Más recientes primero (última imagen subida se ve al inicio)
+                    items.sort((a, b) => (b.last_modified || 0) - (a.last_modified || 0));
                 }
 
                 allMediaFiles = items;
@@ -481,9 +486,9 @@
                     <span class="text-[9px] text-gray-400 font-semibold flex-shrink-0">${item.size ? formatBytesHelper(item.size) : ''}</span>
                 </div>
                 <button type="button" 
-                        class="absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity z-10" 
+                        class="absolute top-2 right-2 w-7 h-7 bg-red-500 hover:bg-red-600 active:scale-90 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all z-20 cursor-pointer" 
                         onclick="confirmDeleteMedia(event, '${item.url}')" title="Eliminar Imagen">
-                    <i class="ph-bold ph-trash text-xs"></i>
+                    <i class="ph-bold ph-trash text-xs pointer-events-none"></i>
                 </button>
             `;
 
@@ -758,8 +763,10 @@
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
+                const targetFilename = url ? url.split('/').pop() : '';
                 const formData = new FormData();
                 formData.append('url', url);
+                formData.append('filename', targetFilename);
                 formData.append('_token', '{{ csrf_token() }}');
 
                 fetch(window.mediaRoutes.delete, {
@@ -777,9 +784,23 @@
                             showConfirmButton: false
                         });
 
-                        if (selectedMediaItemData && selectedMediaItemData.url === url) {
+                        // Limpiar de localStorage si estaba guardada
+                        try {
+                            let order = getCustomMediaOrder() || [];
+                            order = order.filter(u => u !== url && (!targetFilename || !u.endsWith('/' + targetFilename)));
+                            localStorage.setItem('cape_media_custom_order', JSON.stringify(order));
+                        } catch(e) {}
+
+                        // Resetear vista previa si la imagen eliminada era la seleccionada
+                        if (selectedMediaItemData && (selectedMediaItemData.url === url || selectedMediaItemData.name === targetFilename)) {
                             resetMediaPreview();
                         }
+
+                        // Eliminar inmediatamente del array en memoria y actualizar grilla
+                        allMediaFiles = allMediaFiles.filter(item => item.url !== url && item.name !== targetFilename);
+                        renderFilteredMedia();
+
+                        // Recargar del servidor
                         loadMediaLibrary();
                     } else {
                         if (data.used) {
@@ -901,10 +922,19 @@
         .then(data => {
             if (loader) loader.classList.add('hidden');
             if (data.success || data.url) {
+                // Asegurar que la nueva imagen aparezca al inicio absoluto del mosaico
+                try {
+                    let order = getCustomMediaOrder() || [];
+                    const targetName = data.name || (data.url ? data.url.split('/').pop() : '');
+                    order = order.filter(u => u !== data.url && (!targetName || !u.endsWith('/' + targetName)));
+                    order.unshift(data.url);
+                    localStorage.setItem('cape_media_custom_order', JSON.stringify(order));
+                } catch(e) {}
+
                 Swal.fire({
                     icon: 'success',
                     title: '¡Imagen subida con éxito!',
-                    text: 'Se ha añadido a la biblioteca de medios.',
+                    text: 'Se ha añadido al inicio de la biblioteca.',
                     timer: 1400,
                     showConfirmButton: false
                 });
