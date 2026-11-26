@@ -23,6 +23,10 @@
         box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.3) !important;
         transform: scale(1.02);
     }
+    /* Asegurar que SweetAlert2 SIEMPRE aparezca por encima de este modal */
+    .swal2-container {
+        z-index: 100000 !important;
+    }
 </style>
 
 <div id="media-modal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center p-2 sm:p-4 md:p-6"
@@ -306,26 +310,31 @@
                     };
                 });
 
-                // Cargar orden personalizado de localStorage si existe
-                const savedOrder = getCustomMediaOrder();
-                if (savedOrder && savedOrder.length > 0) {
-                    items.sort((a, b) => {
-                        const idxA = savedOrder.indexOf(a.url);
-                        const idxB = savedOrder.indexOf(b.url);
-                        if (idxA === -1 && idxB === -1) {
-                            return (b.last_modified || 0) - (a.last_modified || 0);
-                        }
-                        if (idxA === -1) return -1; // Nuevas imágenes siempre al inicio del mosaico
-                        if (idxB === -1) return 1;
-                        return idxA - idxB;
-                    });
-                } else {
-                    // Por defecto: Más recientes primero (última imagen subida se ve al inicio)
-                    items.sort((a, b) => (b.last_modified || 0) - (a.last_modified || 0));
+                // Ordenar SIEMPRE por fecha más reciente primero (última imagen subida al inicio)
+                items.sort((a, b) => (b.last_modified || 0) - (a.last_modified || 0));
+
+                // Si se acaba de subir una imagen (autoSelectUrl), asegurar 100% que quede al inicio absoluto (índice 0)
+                if (autoSelectUrl) {
+                    const targetName = autoSelectUrl.split('/').pop();
+                    const idx = items.findIndex(item => 
+                        item.url === autoSelectUrl || 
+                        (item.name && item.name === targetName) || 
+                        (item.url && item.url.split('/').pop() === targetName)
+                    );
+                    if (idx > -1) {
+                        const [uploadedItem] = items.splice(idx, 1);
+                        items.unshift(uploadedItem);
+                    }
                 }
 
                 allMediaFiles = items;
                 renderFilteredMedia();
+
+                // Desplazar el scroll al tope para que la nueva foto se vea al inicio inmediatamente
+                const scrollContainer = document.getElementById('media-grid')?.parentElement;
+                if (scrollContainer) {
+                    scrollContainer.scrollTop = 0;
+                }
 
                 if (autoSelectUrl) {
                     const targetName = autoSelectUrl.split('/').pop();
@@ -922,14 +931,27 @@
         .then(data => {
             if (loader) loader.classList.add('hidden');
             if (data.success || data.url) {
-                // Asegurar que la nueva imagen aparezca al inicio absoluto del mosaico
-                try {
-                    let order = getCustomMediaOrder() || [];
-                    const targetName = data.name || (data.url ? data.url.split('/').pop() : '');
-                    order = order.filter(u => u !== data.url && (!targetName || !u.endsWith('/' + targetName)));
-                    order.unshift(data.url);
-                    localStorage.setItem('cape_media_custom_order', JSON.stringify(order));
-                } catch(e) {}
+                // Insertar inmediatamente la nueva imagen al inicio del mosaico
+                const uploadedUrl = data.url;
+                const uploadedName = data.name || (uploadedUrl ? uploadedUrl.split('/').pop() : file.name);
+                const newItem = {
+                    url: uploadedUrl,
+                    fallback_url: data.fallback_url || '',
+                    name: uploadedName,
+                    size: data.size || file.size || 0,
+                    last_modified: data.last_modified || (Date.now() / 1000)
+                };
+
+                // Poner la nueva imagen al principio absoluto (índice 0)
+                allMediaFiles = allMediaFiles.filter(i => i.url !== uploadedUrl && i.name !== uploadedName);
+                allMediaFiles.unshift(newItem);
+                renderFilteredMedia();
+
+                // Scroll al inicio inmediato
+                const scrollContainer = document.getElementById('media-grid')?.parentElement;
+                if (scrollContainer) {
+                    scrollContainer.scrollTop = 0;
+                }
 
                 Swal.fire({
                     icon: 'success',
@@ -938,6 +960,7 @@
                     timer: 1400,
                     showConfirmButton: false
                 });
+
                 loadMediaLibrary(data.url);
             } else {
                 Swal.fire({
